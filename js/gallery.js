@@ -1,8 +1,8 @@
 /**
- * Gallery module for rendering the masonry grid
+ * Gallery module for rendering the grid
  */
 
-import { createElement, downloadImage, escapeHtml } from './utils.js';
+import { createElement, downloadImage } from './utils.js';
 import { state } from './state.js';
 
 /** @type {HTMLElement|null} */
@@ -121,32 +121,8 @@ function createImageCard(image) {
         img.classList.add('gallery__image--loaded');
     };
 
-    // Overlay
-    const overlay = createElement('div', { className: 'gallery__overlay' }, [
-        createElement('p', { className: 'gallery__prompt' }, escapeHtml(image.prompt)),
-        createElement('div', { className: 'gallery__actions' }, [
-            createElement('button', {
-                className: 'gallery__action-btn',
-                title: 'Download',
-                onClick: (e) => {
-                    e.stopPropagation();
-                    downloadImage(image.url, `ai-image-${image.id}.png`);
-                }
-            }, '⬇'),
-            createElement('button', {
-                className: 'gallery__action-btn',
-                title: 'View fullscreen',
-                onClick: (e) => {
-                    e.stopPropagation();
-                    openLightbox(image);
-                }
-            }, '⤢')
-        ])
-    ]);
-
     card.appendChild(deleteBtn);
     card.appendChild(img);
-    card.appendChild(overlay);
 
     // Click to open lightbox
     card.addEventListener('click', () => openLightbox(image));
@@ -216,6 +192,7 @@ function openLightbox(image) {
     const modalImage = modal.querySelector('.modal__image');
     const modalPrompt = modal.querySelector('.modal__prompt');
     const downloadBtn = modal.querySelector('.modal__download-btn');
+    const copyBtn = modal.querySelector('.modal__copy-btn');
 
     if (modalImage) {
         modalImage.src = image.url;
@@ -228,6 +205,20 @@ function openLightbox(image) {
 
     if (downloadBtn) {
         downloadBtn.onclick = () => downloadImage(image.url, `ai-image-${image.id}.png`);
+    }
+
+    if (copyBtn) {
+        copyBtn.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(image.prompt);
+                copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>`;
+                setTimeout(() => {
+                    copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        };
     }
 
     modal.classList.add('modal--active');

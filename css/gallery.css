@@ -1,100 +1,55 @@
-/* Gallery Styles - Masonry Layout */
+/* Gallery Styles - Grid Layout */
 
 .gallery {
-    column-count: 2;
-    column-gap: var(--spacing-lg);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(256px, 1fr));
+    gap: 20px;
 }
 
 .gallery__card {
-    break-inside: avoid;
-    margin-bottom: var(--spacing-lg);
     position: relative;
-    border-radius: var(--border-radius-md);
+    border-radius: 12px;
     overflow: hidden;
     background: var(--bg-card);
     cursor: pointer;
-    transition: var(--transition-normal);
-    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    aspect-ratio: 1;
 }
 
 .gallery__card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-.gallery__card:hover .gallery__overlay {
+.gallery__card:hover .gallery__delete-btn {
     opacity: 1;
 }
 
 /* Image */
 .gallery__image {
     width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
-    transition: var(--transition-normal);
+    transition: transform 0.3s ease;
 }
 
 .gallery__card:hover .gallery__image {
-    transform: scale(1.02);
+    transform: scale(1.05);
 }
 
-/* Overlay */
+/* Overlay - Hidden by default, only show delete on hover */
 .gallery__overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(0deg,
-            rgba(0, 0, 0, 0.9) 0%,
-            rgba(0, 0, 0, 0.4) 50%,
-            transparent 100%);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: var(--spacing-md);
-    opacity: 0;
-    transition: var(--transition-normal);
-}
-
-.gallery__prompt {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    margin-bottom: var(--spacing-sm);
-}
-
-.gallery__actions {
-    display: flex;
-    gap: var(--spacing-sm);
-}
-
-.gallery__action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.875rem;
-    transition: var(--transition-fast);
-}
-
-.gallery__action-btn:hover {
-    background: var(--accent-primary);
-    color: var(--bg-primary);
+    display: none;
 }
 
 /* Placeholder Card with Golden Shimmer */
 .gallery__placeholder {
-    break-inside: avoid;
-    margin-bottom: var(--spacing-md);
-    border-radius: var(--border-radius-md);
+    border-radius: 12px;
     overflow: hidden;
-    background: var(--bg-card);
-    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, #fef9e7 0%, #fdeaa8 100%);
+    aspect-ratio: 1;
     position: relative;
 }
 
@@ -103,26 +58,25 @@
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg,
-            var(--shimmer-start) 0%,
-            #d0d0d0 25%,
-            #888888 50%,
-            #d0d0d0 75%,
-            var(--shimmer-end) 100%);
-    background-size: 400% 100%;
-    animation: goldenShimmer 2s ease-in-out infinite;
+            transparent 0%,
+            rgba(255, 215, 0, 0.4) 25%,
+            rgba(255, 193, 7, 0.6) 50%,
+            rgba(255, 215, 0, 0.4) 75%,
+            transparent 100%);
+    background-size: 200% 100%;
+    animation: goldenShimmer 1.5s ease-in-out infinite;
 }
 
 .gallery__placeholder::after {
-    content: '⏳ Generating...';
+    content: '✨ Generating...';
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #333333;
+    color: #b8860b;
     font-size: 0.875rem;
     font-weight: 600;
-    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
     z-index: 1;
 }
 
@@ -139,27 +93,29 @@
 /* Responsive Gallery */
 @media (min-width: 1400px) {
     .gallery {
-        column-count: 3;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
 }
 
 @media (max-width: 900px) {
     .gallery {
-        column-count: 2;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
     }
 }
 
 @media (max-width: 600px) {
     .gallery {
-        column-count: 1;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
 
     .gallery__card {
-        margin-bottom: var(--spacing-sm);
+        border-radius: 10px;
     }
 
     .gallery__placeholder {
-        margin-bottom: var(--spacing-sm);
+        border-radius: 10px;
     }
 }
 
@@ -187,19 +143,20 @@
 /* Delete Button */
 .gallery__delete-btn {
     position: absolute;
-    top: var(--spacing-sm);
-    right: var(--spacing-sm);
-    width: 32px;
-    height: 32px;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.6);
-    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    color: white;
     border-radius: 50%;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     opacity: 0;
-    transition: var(--transition-fast);
+    transition: all 0.15s ease;
     z-index: 10;
 }
 
@@ -209,5 +166,5 @@
 
 .gallery__delete-btn:hover {
     background: #ef4444;
-    color: white;
+    transform: scale(1.1);
 }

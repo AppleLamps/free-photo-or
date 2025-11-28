@@ -315,8 +315,8 @@ function setLoading(input, button, isLoading) {
     input.disabled = isLoading;
     button.disabled = isLoading;
 
-    const sendIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
-    const loadingIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
+    const sendIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg>`;
+    const loadingIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
 
     if (isLoading) {
         button.classList.add('input-bar__button--loading');
@@ -333,7 +333,7 @@ function setLoading(input, button, isLoading) {
  */
 function autoResizeTextarea(textarea) {
     textarea.style.height = 'auto';
-    const newHeight = Math.min(textarea.scrollHeight, 120);
+    const newHeight = Math.min(textarea.scrollHeight, 150);
     textarea.style.height = newHeight + 'px';
 }
 
