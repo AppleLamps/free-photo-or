@@ -27,7 +27,7 @@ function getGenerationSettings() {
     const settings = {
         num_inference_steps: parseInt(stepsInput?.value || 30, 10),
         num_images: parseInt(numImagesSelect?.value || 2, 10),
-        output_format: formatSelect?.value || 'png',
+        output_format: formatSelect?.value || 'webp',
         acceleration: accelerationSelect?.value || 'none',
         enable_safety_checker: safetyCheckbox?.checked ?? false,
         sync_mode: syncCheckbox?.checked ?? false,

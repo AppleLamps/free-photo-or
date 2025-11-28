@@ -114,6 +114,9 @@ function preloadAndShowImage(image) {
     img.src = image.url;
 
     const showImage = () => {
+        // Clean up event handlers to allow garbage collection
+        img.onload = null;
+        img.onerror = null;
         removePlaceholder();
         prependImageCard(image, true); // true = already loaded
         updateEmptyState();
@@ -142,10 +145,13 @@ function renderGallery() {
         return;
     }
 
+    // Use DocumentFragment to batch DOM insertions (single reflow)
+    const fragment = document.createDocumentFragment();
     images.forEach(image => {
         const card = createImageCard(image);
-        galleryElement.appendChild(card);
+        fragment.appendChild(card);
     });
+    galleryElement.appendChild(fragment);
 
     updateEmptyState();
 }

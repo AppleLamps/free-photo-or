@@ -57,13 +57,13 @@
     content: '';
     position: absolute;
     inset: 0;
+    transform: translateX(-100%);
     background: linear-gradient(105deg,
             transparent 40%,
             rgba(255, 215, 0, 0.15) 45%,
             rgba(255, 193, 7, 0.25) 50%,
             rgba(255, 215, 0, 0.15) 55%,
             transparent 60%);
-    background-size: 300% 100%;
     animation: shimmer 1.8s ease-in-out infinite;
 }
 
@@ -83,11 +83,11 @@
 
 @keyframes shimmer {
     0% {
-        background-position: 100% 0;
+        transform: translateX(-100%);
     }
 
     100% {
-        background-position: -100% 0;
+        transform: translateX(100%);
     }
 }
 
