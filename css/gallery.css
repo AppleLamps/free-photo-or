@@ -1,0 +1,212 @@
+/* Gallery Styles - Masonry Layout */
+
+.gallery {
+    column-count: 3;
+    column-gap: var(--spacing-md);
+}
+
+.gallery__card {
+    break-inside: avoid;
+    margin-bottom: var(--spacing-md);
+    position: relative;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: var(--transition-normal);
+}
+
+.gallery__card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.gallery__card:hover .gallery__overlay {
+    opacity: 1;
+}
+
+/* Image */
+.gallery__image {
+    width: 100%;
+    display: block;
+    transition: var(--transition-normal);
+}
+
+.gallery__card:hover .gallery__image {
+    transform: scale(1.02);
+}
+
+/* Overlay */
+.gallery__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg,
+            rgba(0, 0, 0, 0.9) 0%,
+            rgba(0, 0, 0, 0.4) 50%,
+            transparent 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: var(--spacing-md);
+    opacity: 0;
+    transition: var(--transition-normal);
+}
+
+.gallery__prompt {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: var(--spacing-sm);
+}
+
+.gallery__actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.gallery__action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    transition: var(--transition-fast);
+}
+
+.gallery__action-btn:hover {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+/* Placeholder Card with Golden Shimmer */
+.gallery__placeholder {
+    break-inside: avoid;
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    background: var(--bg-card);
+    aspect-ratio: 16 / 9;
+    position: relative;
+}
+
+.gallery__placeholder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            var(--shimmer-start) 0%,
+            var(--shimmer-mid) 25%,
+            #f5d485 50%,
+            var(--shimmer-mid) 75%,
+            var(--shimmer-end) 100%);
+    background-size: 400% 100%;
+    animation: goldenShimmer 2s ease-in-out infinite;
+}
+
+.gallery__placeholder::after {
+    content: '✨ Generating...';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bg-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+@keyframes goldenShimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Responsive Gallery */
+@media (max-width: 1200px) {
+    .gallery {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 900px) {
+    .gallery {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 600px) {
+    .gallery {
+        column-count: 1;
+    }
+
+    .gallery__card {
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .gallery__placeholder {
+        margin-bottom: var(--spacing-sm);
+    }
+}
+
+/* Image Loading Animation */
+.gallery__image--loading {
+    opacity: 0;
+}
+
+.gallery__image--loaded {
+    animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Delete Button */
+.gallery__delete-btn {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--text-primary);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: var(--transition-fast);
+    z-index: 10;
+}
+
+.gallery__card:hover .gallery__delete-btn {
+    opacity: 1;
+}
+
+.gallery__delete-btn:hover {
+    background: #ef4444;
+    color: white;
+}
