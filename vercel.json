@@ -5,9 +5,20 @@
     "framework": null,
     "installCommand": "npm install",
     "routes": [
-        { "src": "/favicon.ico", "dest": "/favicon.svg" },
-        { "handle": "filesystem" },
-        { "src": "/api/(.*)", "dest": "/api/$1" },
-        { "src": "/(.*)", "dest": "/$1" }
+        {
+            "src": "/favicon.ico",
+            "dest": "/favicon.svg"
+        },
+        {
+            "handle": "filesystem"
+        },
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/$1"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/$1"
+        }
     ]
 }
