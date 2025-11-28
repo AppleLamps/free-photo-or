@@ -2,14 +2,15 @@
 
 A beautiful, lightweight AI image generator powered by [Fal.ai](https://fal.ai/). Built with vanilla JavaScript (ES Modules) and deployable to Vercel with zero build configuration.
 
-![Light Mode UI](https://img.shields.io/badge/UI-Light%20Mode-ffffff)
 ![No Build Tools](https://img.shields.io/badge/Build-None%20Required-green)
 ![Vercel Ready](https://img.shields.io/badge/Deploy-Vercel-black)
+![PWA Ready](https://img.shields.io/badge/PWA-Ready-blue)
 
 ## Features
 
 - 🎨 **AI Image Generation** - Generate images from text prompts using Fal.ai's Z-Image Turbo model
 - ✨ **Prompt Enhancement** - AI-powered prompt improvement using OpenRouter (Grok 4 Fast)
+- 🎲 **Surprise Me** - Random creative prompt suggestions for inspiration
 - 🖼️ **Grid Gallery** - Responsive thumbnail grid with click-to-expand lightbox
 - 🌟 **Golden Shimmer Loading** - Beautiful golden loading animation while generating
 - ⚙️ **Full Settings Panel** - Configure image size, steps, number of images, format, and more
@@ -17,7 +18,7 @@ A beautiful, lightweight AI image generator powered by [Fal.ai](https://fal.ai/)
 - 🔍 **Lightbox View** - Click any thumbnail for full-screen preview with download option
 - 📋 **Copy Prompt** - Copy prompts directly from the lightbox
 - ⬇️ **Download Images** - Save generated images directly
-- ☀️ **Light Mode** - Clean, modern light theme with black accents
+- 📱 **PWA Support** - Install as a standalone app on mobile and desktop
 - 🚀 **Zero Build** - No Webpack, Vite, or bundlers needed
 
 ## Tech Stack
@@ -36,7 +37,7 @@ A beautiful, lightweight AI image generator powered by [Fal.ai](https://fal.ai/)
 │   ├── generate.js       # Vercel serverless function (Fal.ai proxy)
 │   └── enhance.js        # Vercel serverless function (OpenRouter proxy)
 ├── css/
-│   ├── base.css          # Reset, variables, light mode colors
+│   ├── base.css          # Reset, variables, colors
 │   ├── layout.css        # Main container, centering
 │   ├── components.css    # Input bar, buttons, modal, settings panel
 │   └── gallery.css       # Grid layout, cards, shimmer animations
@@ -45,8 +46,15 @@ A beautiful, lightweight AI image generator powered by [Fal.ai](https://fal.ai/)
 │   ├── api.js            # Client-side API wrapper
 │   ├── state.js          # State management & localStorage
 │   ├── utils.js          # Helper functions
-│   └── gallery.js        # Gallery rendering & lightbox
+│   ├── gallery.js        # Gallery rendering & lightbox
+│   └── prompts.js        # Creative prompts for "Surprise Me" feature
+├── public/
+│   ├── manifest.json     # PWA manifest
+│   ├── sw.js             # Service worker
+│   └── icon-192.svg      # App icon
 ├── index.html            # Main HTML file
+├── server.js             # Express server for local development
+├── favicon.svg           # Favicon
 ├── vercel.json           # Vercel configuration
 └── README.md
 ```
@@ -64,14 +72,14 @@ A beautiful, lightweight AI image generator powered by [Fal.ai](https://fal.ai/)
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/ai-image-generator.git
-   cd ai-image-generator
+   git clone https://github.com/AppleLamps/free-photo-or.git
+   cd free-photo-or
    ```
 
-2. **Install Vercel CLI** (if not already installed)
+2. **Install dependencies**
 
    ```bash
-   npm install -g vercel
+   npm install
    ```
 
 3. **Set up environment variables**
@@ -82,10 +90,18 @@ A beautiful, lightweight AI image generator powered by [Fal.ai](https://fal.ai/)
    echo "OPENROUTER_API_KEY=your_openrouter_key_here" >> .env.local
    ```
 
-4. **Run locally with Vercel**
+4. **Run locally**
+
+   Option A: Using Express server
 
    ```bash
-   vercel dev
+   npm start
+   ```
+
+   Option B: Using Vercel CLI (recommended for testing serverless functions)
+
+   ```bash
+   npx vercel dev
    ```
 
 5. **Open in browser**
@@ -121,12 +137,12 @@ The generate serverless function accepts these parameters:
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `prompt` | string | *required* | Image description |
-| `image_size` | string/object | `square_hd` | Size preset or `{width, height}` |
+| `image_size` | string/object | `landscape_4_3` | Size preset or `{width, height}` |
 | `num_inference_steps` | integer | `30` | Quality (higher = better, slower) |
-| `num_images` | integer | `2` | Number of images to generate (1-4) |
+| `num_images` | integer | `1` | Number of images to generate (1-4) |
 | `seed` | integer | *random* | For reproducible results |
 | `output_format` | string | `png` | `jpeg`, `png`, or `webp` |
-| `enable_safety_checker` | boolean | `false` | NSFW content filter |
+| `enable_safety_checker` | boolean | `true` | NSFW content filter |
 | `sync_mode` | boolean | `false` | Wait for completion |
 | `acceleration` | string | `none` | `none`, `regular`, or `high` |
 
@@ -144,10 +160,11 @@ The generate serverless function accepts these parameters:
 
 1. Type a description of the image you want to create
 2. (Optional) Click the ✨ sparkle button to enhance your prompt with AI
-3. Click the send button or press Enter to generate
-4. Watch the golden shimmer while your images generate
-5. Click any thumbnail for fullscreen view
-6. Use the download button or copy the prompt from the lightbox
+3. (Optional) Click the 🎲 dice button for a random creative prompt
+4. Click the send button or press Enter to generate
+5. Watch the golden shimmer while your images generate
+6. Click any thumbnail for fullscreen view
+7. Use the download button or copy the prompt from the lightbox
 
 ### Settings Panel
 
