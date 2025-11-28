@@ -11,8 +11,58 @@ let galleryElement = null;
 /** @type {HTMLElement|null} */
 let emptyStateElement = null;
 
-/** @type {HTMLElement|null} */
-let placeholderElement = null;
+/** @type {HTMLElement[]} */
+let placeholderElements = [];
+
+/** @type {Map<string, NodeJS.Timeout>} */
+let confirmationTimeouts = new Map();
+
+/** @type {Set<string>} */
+let pendingDeletions = new Set();
+
+/**
+ * Reset confirmation state for an image
+ * @param {string} imageId - Image ID
+ */
+function resetConfirmationState(imageId) {
+    pendingDeletions.delete(imageId);
+
+    const timeout = confirmationTimeouts.get(imageId);
+    if (timeout) {
+        clearTimeout(timeout);
+        confirmationTimeouts.delete(imageId);
+    }
+
+    // Reset button appearance
+    const deleteBtn = document.querySelector(`[data-id="${imageId}"] .gallery__delete-btn`);
+    if (deleteBtn) {
+        deleteBtn.classList.remove('gallery__delete-btn--confirm');
+        deleteBtn.textContent = '✕';
+        deleteBtn.title = 'Delete image';
+    }
+}
+
+/**
+ * Handle first delete button press
+ * @param {string} imageId - Image ID
+ */
+function handleFirstDeletePress(imageId) {
+    pendingDeletions.add(imageId);
+
+    const deleteBtn = document.querySelector(`[data-id="${imageId}"] .gallery__delete-btn`);
+    if (deleteBtn) {
+        deleteBtn.classList.add('gallery__delete-btn--confirm');
+        deleteBtn.textContent = '!';
+        deleteBtn.title = 'Tap again to confirm';
+    }
+
+    // Auto-reset after 3 seconds
+    const timeout = setTimeout(() => {
+        resetConfirmationState(imageId);
+    }, 3000);
+
+    confirmationTimeouts.set(imageId, timeout);
+}
 
 /**
  * Initialize the gallery
@@ -47,6 +97,10 @@ function handleStateChange(action, data) {
             updateEmptyState();
             break;
         case 'clear':
+            // Clean up all confirmation states
+            confirmationTimeouts.forEach(timeout => clearTimeout(timeout));
+            confirmationTimeouts.clear();
+            pendingDeletions.clear();
             renderGallery();
             break;
     }
@@ -81,7 +135,7 @@ function renderGallery() {
 function updateEmptyState() {
     if (!emptyStateElement) return;
 
-    const hasImages = state.getImages().length > 0 || placeholderElement;
+    const hasImages = state.getImages().length > 0 || placeholderElements.length > 0;
     emptyStateElement.style.display = hasImages ? 'none' : 'flex';
 }
 
@@ -102,8 +156,14 @@ function createImageCard(image) {
         title: 'Delete image',
         onClick: (e) => {
             e.stopPropagation();
-            if (confirm('Delete this image?')) {
+
+            if (pendingDeletions.has(image.id)) {
+                // Second press - confirm deletion
+                resetConfirmationState(image.id);
                 state.removeImage(image.id);
+            } else {
+                // First press - show confirmation
+                handleFirstDeletePress(image.id);
             }
         }
     }, '✕');
@@ -153,6 +213,9 @@ function removeImageCard(id) {
         card.style.opacity = '0';
         card.style.transform = 'scale(0.9)';
         setTimeout(() => card.remove(), 200);
+
+        // Clean up confirmation state when image is removed
+        resetConfirmationState(id);
     }
 }
 
@@ -162,12 +225,12 @@ function removeImageCard(id) {
 export function showPlaceholder() {
     if (!galleryElement) return;
 
-    placeholderElement = createElement('div', {
-        className: 'gallery__placeholder',
-        id: 'generation-placeholder'
+    const placeholder = createElement('div', {
+        className: 'gallery__placeholder'
     });
 
-    galleryElement.insertBefore(placeholderElement, galleryElement.firstChild);
+    placeholderElements.push(placeholder);
+    galleryElement.insertBefore(placeholder, galleryElement.firstChild);
     updateEmptyState();
 }
 
@@ -175,10 +238,19 @@ export function showPlaceholder() {
  * Remove loading placeholder
  */
 export function removePlaceholder() {
-    if (placeholderElement) {
-        placeholderElement.remove();
-        placeholderElement = null;
+    const placeholder = placeholderElements.pop();
+    if (placeholder) {
+        placeholder.remove();
     }
+}
+
+/**
+ * Remove all loading placeholders
+ */
+export function removeAllPlaceholders() {
+    placeholderElements.forEach(p => p.remove());
+    placeholderElements = [];
+    updateEmptyState();
 }
 
 /**

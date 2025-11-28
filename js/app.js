@@ -5,7 +5,7 @@
 import { generateImage, enhancePrompt } from './api.js';
 import { state } from './state.js';
 import { generateId } from './utils.js';
-import { initGallery, showPlaceholder, removePlaceholder, initLightbox, closeLightbox } from './gallery.js';
+import { initGallery, showPlaceholder, removePlaceholder, removeAllPlaceholders, initLightbox, closeLightbox } from './gallery.js';
 
 /**
  * Get current generation settings from the UI
@@ -25,15 +25,15 @@ function getGenerationSettings() {
 
     const settings = {
         num_inference_steps: parseInt(stepsInput?.value || 30, 10),
-        num_images: parseInt(numImagesSelect?.value || 1, 10),
+        num_images: parseInt(numImagesSelect?.value || 2, 10),
         output_format: formatSelect?.value || 'png',
         acceleration: accelerationSelect?.value || 'none',
-        enable_safety_checker: safetyCheckbox?.checked ?? true,
+        enable_safety_checker: safetyCheckbox?.checked ?? false,
         sync_mode: syncCheckbox?.checked ?? false,
     };
 
     // Handle image size
-    const imageSizeValue = imageSizeSelect?.value || 'landscape_4_3';
+    const imageSizeValue = imageSizeSelect?.value || 'square_hd';
     if (imageSizeValue === 'custom') {
         settings.image_size = {
             width: parseInt(widthInput?.value || 1024, 10),
@@ -204,12 +204,10 @@ async function handleGenerate(input, button) {
     try {
         const response = await generateImage(prompt, settings);
 
-        if (response.images && response.images.length > 0) {
-            // Remove placeholders
-            for (let i = 0; i < numImages; i++) {
-                removePlaceholder();
-            }
+        // Always remove all placeholders first
+        removeAllPlaceholders();
 
+        if (response.images && response.images.length > 0) {
             // Add each generated image to state
             response.images.forEach((image) => {
                 state.addImage({
@@ -220,15 +218,14 @@ async function handleGenerate(input, button) {
                 });
             });
 
-            // Clear input
+            // Clear input and reset height
             input.value = '';
+            autoResizeTextarea(input);
         }
     } catch (error) {
         console.error('Generation failed:', error);
         // Remove all placeholders on error
-        for (let i = 0; i < numImages; i++) {
-            removePlaceholder();
-        }
+        removeAllPlaceholders();
         showError(error.message || 'Failed to generate image. Please try again.');
     } finally {
         setLoading(input, button, false);
