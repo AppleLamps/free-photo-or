@@ -3,6 +3,10 @@
         {
             "source": "/api/generate",
             "destination": "/api/generate.js"
+        },
+        {
+            "source": "/api/enhance",
+            "destination": "/api/enhance.js"
         }
     ]
 }

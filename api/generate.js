@@ -21,7 +21,9 @@ export default async function handler(req, res) {
         num_images = 1,
         seed,
         output_format = 'png',
-        enable_safety_checker = true
+        enable_safety_checker = true,
+        sync_mode = false,
+        acceleration = 'none'
     } = req.body;
 
     if (!prompt || typeof prompt !== 'string') {
@@ -38,15 +40,17 @@ export default async function handler(req, res) {
     const payload = {
         prompt: prompt.trim(),
         image_size,
-        num_inference_steps,
-        num_images,
+        num_inference_steps: parseInt(num_inference_steps, 10),
+        num_images: parseInt(num_images, 10),
         enable_safety_checker,
         output_format,
+        sync_mode,
+        acceleration,
     };
 
     // Only include seed if provided
-    if (seed !== undefined && seed !== null) {
-        payload.seed = seed;
+    if (seed !== undefined && seed !== null && seed !== '') {
+        payload.seed = parseInt(seed, 10);
     }
 
     try {

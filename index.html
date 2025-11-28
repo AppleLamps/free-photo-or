@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="AI Image Generator - Create stunning images with artificial intelligence">
-    <meta name="theme-color" content="#0a0a0b">
+    <meta name="theme-color" content="#ffffff">
     <title>AI Image Generator</title>
 
     <!-- Stylesheets -->
@@ -45,11 +45,127 @@
         <!-- Floating Input Bar -->
         <div class="input-bar">
             <div class="input-bar__container">
-                <input type="text" id="prompt-input" class="input-bar__input" placeholder="Describe an image..."
-                    autocomplete="off" maxlength="500">
-                <button id="generate-btn" class="input-bar__button" title="Generate image">
-                    ✨
+                <textarea id="prompt-input" class="input-bar__input" placeholder="Describe an image..."
+                    autocomplete="off" maxlength="1000" rows="1"></textarea>
+                <button id="settings-btn" class="input-bar__icon-btn" title="Generation settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
                 </button>
+                <button id="enhance-btn" class="input-bar__icon-btn" title="Enhance prompt with AI">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                    </svg>
+                </button>
+                <button id="generate-btn" class="input-bar__button" title="Generate image">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16"
+                        height="16">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="settings-panel">
+            <div class="settings-panel__header">
+                <h3 class="settings-panel__title">Generation Settings</h3>
+                <button id="settings-close" class="settings-panel__close">✕</button>
+            </div>
+            <div class="settings-panel__content">
+                <!-- Image Size -->
+                <div class="settings-group">
+                    <label class="settings-label">Image Size</label>
+                    <select id="setting-image-size" class="settings-select">
+                        <option value="square_hd">Square HD</option>
+                        <option value="square">Square</option>
+                        <option value="portrait_4_3">Portrait 4:3</option>
+                        <option value="portrait_16_9">Portrait 16:9</option>
+                        <option value="landscape_4_3" selected>Landscape 4:3</option>
+                        <option value="landscape_16_9">Landscape 16:9</option>
+                        <option value="custom">Custom Size</option>
+                    </select>
+                </div>
+
+                <!-- Custom Size (hidden by default) -->
+                <div id="custom-size-group" class="settings-group settings-group--hidden">
+                    <div class="settings-row">
+                        <div class="settings-field">
+                            <label class="settings-label">Width</label>
+                            <input type="number" id="setting-width" class="settings-input" value="1024" min="256"
+                                max="2048" step="64">
+                        </div>
+                        <div class="settings-field">
+                            <label class="settings-label">Height</label>
+                            <input type="number" id="setting-height" class="settings-input" value="768" min="256"
+                                max="2048" step="64">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inference Steps -->
+                <div class="settings-group">
+                    <label class="settings-label">Inference Steps: <span id="steps-value">30</span></label>
+                    <input type="range" id="setting-steps" class="settings-range" value="30" min="1" max="50" step="1">
+                </div>
+
+                <!-- Number of Images -->
+                <div class="settings-group">
+                    <label class="settings-label">Number of Images</label>
+                    <select id="setting-num-images" class="settings-select">
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+
+                <!-- Output Format -->
+                <div class="settings-group">
+                    <label class="settings-label">Output Format</label>
+                    <select id="setting-format" class="settings-select">
+                        <option value="png" selected>PNG</option>
+                        <option value="jpeg">JPEG</option>
+                        <option value="webp">WebP</option>
+                    </select>
+                </div>
+
+                <!-- Acceleration -->
+                <div class="settings-group">
+                    <label class="settings-label">Acceleration</label>
+                    <select id="setting-acceleration" class="settings-select">
+                        <option value="none" selected>None (Best Quality)</option>
+                        <option value="regular">Regular</option>
+                        <option value="high">High (Fastest)</option>
+                    </select>
+                </div>
+
+                <!-- Seed -->
+                <div class="settings-group">
+                    <label class="settings-label">Seed (optional)</label>
+                    <input type="number" id="setting-seed" class="settings-input" placeholder="Random" min="0">
+                </div>
+
+                <!-- Safety Checker -->
+                <div class="settings-group">
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="setting-safety" checked>
+                        <span>Enable Safety Checker</span>
+                    </label>
+                </div>
+
+                <!-- Sync Mode -->
+                <div class="settings-group">
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="setting-sync">
+                        <span>Sync Mode (faster, no history)</span>
+                    </label>
+                </div>
             </div>
         </div>
 
