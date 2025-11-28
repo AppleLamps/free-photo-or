@@ -88,9 +88,8 @@ export function initGallery(container, emptyState) {
 function handleStateChange(action, data) {
     switch (action) {
         case 'add':
-            removePlaceholder();
-            prependImageCard(data);
-            updateEmptyState();
+            // Preload image before showing to ensure seamless transition
+            preloadAndShowImage(data);
             break;
         case 'remove':
             removeImageCard(data.id);
@@ -103,6 +102,28 @@ function handleStateChange(action, data) {
             pendingDeletions.clear();
             renderGallery();
             break;
+    }
+}
+
+/**
+ * Preload image and show with seamless transition
+ * @param {Object} image - Image data
+ */
+function preloadAndShowImage(image) {
+    const img = new Image();
+    img.src = image.url;
+
+    const showImage = () => {
+        removePlaceholder();
+        prependImageCard(image, true); // true = already loaded
+        updateEmptyState();
+    };
+
+    if (img.complete) {
+        showImage();
+    } else {
+        img.onload = showImage;
+        img.onerror = showImage; // Still show on error
     }
 }
 
@@ -142,9 +163,10 @@ function updateEmptyState() {
 /**
  * Create an image card element
  * @param {Object} image - Image data
+ * @param {boolean} [preloaded=false] - Whether image is already loaded
  * @returns {HTMLElement}
  */
-function createImageCard(image) {
+function createImageCard(image, preloaded = false) {
     const card = createElement('div', {
         className: 'gallery__card',
         dataset: { id: image.id }
@@ -170,16 +192,18 @@ function createImageCard(image) {
 
     // Image element
     const img = createElement('img', {
-        className: 'gallery__image gallery__image--loading',
+        className: preloaded ? 'gallery__image gallery__image--loaded' : 'gallery__image gallery__image--loading',
         src: image.url,
         alt: image.prompt,
         loading: 'lazy'
     });
 
-    img.onload = () => {
-        img.classList.remove('gallery__image--loading');
-        img.classList.add('gallery__image--loaded');
-    };
+    if (!preloaded) {
+        img.onload = () => {
+            img.classList.remove('gallery__image--loading');
+            img.classList.add('gallery__image--loaded');
+        };
+    }
 
     card.appendChild(deleteBtn);
     card.appendChild(img);
@@ -193,11 +217,12 @@ function createImageCard(image) {
 /**
  * Prepend a new image card to the gallery
  * @param {Object} image - Image data
+ * @param {boolean} [preloaded=false] - Whether image is already loaded
  */
-function prependImageCard(image) {
+function prependImageCard(image, preloaded = false) {
     if (!galleryElement) return;
 
-    const card = createImageCard(image);
+    const card = createImageCard(image, preloaded);
     galleryElement.insertBefore(card, galleryElement.firstChild);
 }
 
