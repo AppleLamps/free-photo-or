@@ -1,9 +1,11 @@
 {
     "version": 2,
-    "rewrites": [
+    "headers": [
         {
-            "source": "/(.*)",
-            "destination": "/$1"
+            "source": "/js/(.*).js",
+            "headers": [
+                { "key": "Content-Type", "value": "application/javascript; charset=utf-8" }
+            ]
         }
     ]
 }
