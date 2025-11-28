@@ -1,20 +1,23 @@
 # ✨ AI Image Generator
 
-A lightweight, single-page AI image generator powered by [Fal.ai](https://fal.ai/). Built with vanilla JavaScript (ES Modules) and deployable to Vercel with zero build configuration.
+A beautiful, lightweight AI image generator powered by [Fal.ai](https://fal.ai/). Built with vanilla JavaScript (ES Modules) and deployable to Vercel with zero build configuration.
 
-![Dark Mode UI](https://img.shields.io/badge/UI-Dark%20Mode-1a1a1a)
+![Light Mode UI](https://img.shields.io/badge/UI-Light%20Mode-ffffff)
 ![No Build Tools](https://img.shields.io/badge/Build-None%20Required-green)
 ![Vercel Ready](https://img.shields.io/badge/Deploy-Vercel-black)
 
 ## Features
 
 - 🎨 **AI Image Generation** - Generate images from text prompts using Fal.ai's Z-Image Turbo model
-- 🖼️ **Masonry Gallery** - Responsive grid layout (1/2/3+ columns)
-- ✨ **Golden Shimmer Loading** - Beautiful loading animation while generating
+- ✨ **Prompt Enhancement** - AI-powered prompt improvement using OpenRouter (Grok 4 Fast)
+- 🖼️ **Grid Gallery** - Responsive thumbnail grid with click-to-expand lightbox
+- 🌟 **Golden Shimmer Loading** - Beautiful golden loading animation while generating
+- ⚙️ **Full Settings Panel** - Configure image size, steps, number of images, format, and more
 - 💾 **Persistent Storage** - Images saved to localStorage
-- 🔍 **Lightbox View** - Click any image for full-screen preview
+- 🔍 **Lightbox View** - Click any thumbnail for full-screen preview with download option
+- 📋 **Copy Prompt** - Copy prompts directly from the lightbox
 - ⬇️ **Download Images** - Save generated images directly
-- 🌙 **Dark Mode** - Easy on the eyes
+- ☀️ **Light Mode** - Clean, modern light theme with black accents
 - 🚀 **Zero Build** - No Webpack, Vite, or bundlers needed
 
 ## Tech Stack
@@ -22,20 +25,23 @@ A lightweight, single-page AI image generator powered by [Fal.ai](https://fal.ai
 - **Frontend:** HTML5, CSS3 (Variables + Flexbox/Grid), Vanilla JS (ES6 Modules)
 - **Backend:** Vercel Serverless Functions (Node.js)
 - **Storage:** localStorage
-- **API:** Fal.ai Z-Image Turbo
+- **APIs:**
+  - Fal.ai Z-Image Turbo (image generation)
+  - OpenRouter / Grok 4 Fast (prompt enhancement)
 
 ## Project Structure
 
 ```
 ├── api/
-│   └── generate.js       # Vercel serverless function (Fal.ai proxy)
+│   ├── generate.js       # Vercel serverless function (Fal.ai proxy)
+│   └── enhance.js        # Vercel serverless function (OpenRouter proxy)
 ├── css/
-│   ├── base.css          # Reset, variables, dark mode colors
+│   ├── base.css          # Reset, variables, light mode colors
 │   ├── layout.css        # Main container, centering
-│   ├── components.css    # Input bar, buttons, modal
-│   └── gallery.css       # Masonry grid, cards, shimmer animations
+│   ├── components.css    # Input bar, buttons, modal, settings panel
+│   └── gallery.css       # Grid layout, cards, shimmer animations
 ├── js/
-│   ├── app.js            # Main entry point
+│   ├── app.js            # Main entry point, settings management
 │   ├── api.js            # Client-side API wrapper
 │   ├── state.js          # State management & localStorage
 │   ├── utils.js          # Helper functions
@@ -51,6 +57,7 @@ A lightweight, single-page AI image generator powered by [Fal.ai](https://fal.ai
 
 - [Node.js](https://nodejs.org/) (for Vercel CLI, optional for local dev)
 - [Fal.ai API Key](https://fal.ai/) - Sign up and get your API key
+- [OpenRouter API Key](https://openrouter.ai/) - For prompt enhancement feature (optional)
 
 ### Local Development
 
@@ -72,6 +79,7 @@ A lightweight, single-page AI image generator powered by [Fal.ai](https://fal.ai
    ```bash
    # Create .env.local file
    echo "FAL_KEY=your_fal_api_key_here" > .env.local
+   echo "OPENROUTER_API_KEY=your_openrouter_key_here" >> .env.local
    ```
 
 4. **Run locally with Vercel**
@@ -94,9 +102,9 @@ A lightweight, single-page AI image generator powered by [Fal.ai](https://fal.ai
    - Go to [vercel.com/new](https://vercel.com/new)
    - Import your repository
 
-3. **Add Environment Variable**
-   - Name: `FAL_KEY`
-   - Value: Your Fal.ai API key
+3. **Add Environment Variables**
+   - `FAL_KEY` - Your Fal.ai API key
+   - `OPENROUTER_API_KEY` - Your OpenRouter API key (optional, for prompt enhancement)
 
 4. **Deploy!**
 
@@ -108,34 +116,50 @@ vercel --prod
 
 ## API Parameters
 
-The serverless function accepts these parameters in the POST body:
+The generate serverless function accepts these parameters:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `prompt` | string | *required* | Image description |
-| `image_size` | string/object | `landscape_4_3` | Size preset or `{width, height}` |
+| `image_size` | string/object | `square_hd` | Size preset or `{width, height}` |
 | `num_inference_steps` | integer | `30` | Quality (higher = better, slower) |
-| `num_images` | integer | `1` | Number of images to generate |
+| `num_images` | integer | `2` | Number of images to generate (1-4) |
 | `seed` | integer | *random* | For reproducible results |
 | `output_format` | string | `png` | `jpeg`, `png`, or `webp` |
-| `enable_safety_checker` | boolean | `true` | NSFW content filter |
+| `enable_safety_checker` | boolean | `false` | NSFW content filter |
+| `sync_mode` | boolean | `false` | Wait for completion |
+| `acceleration` | string | `none` | `none`, `regular`, or `high` |
 
 ### Image Size Presets
 
-- `square_hd` - High-def square
+- `square_hd` - High-def square (default)
 - `square` - Standard square
 - `portrait_4_3` - Portrait 4:3
 - `portrait_16_9` - Portrait 16:9
-- `landscape_4_3` - Landscape 4:3 (default)
+- `landscape_4_3` - Landscape 4:3
 - `landscape_16_9` - Landscape 16:9
+- `custom` - Custom dimensions (256-2048px)
 
 ## Usage
 
 1. Type a description of the image you want to create
-2. Click the ✨ button or press Enter
-3. Watch the golden shimmer while your image generates
-4. Hover over images to see options (download, view)
-5. Click any image for fullscreen view
+2. (Optional) Click the ✨ sparkle button to enhance your prompt with AI
+3. Click the send button or press Enter to generate
+4. Watch the golden shimmer while your images generate
+5. Click any thumbnail for fullscreen view
+6. Use the download button or copy the prompt from the lightbox
+
+### Settings Panel
+
+Click the settings icon (grid) to configure:
+
+- Image size preset or custom dimensions
+- Number of inference steps (1-50)
+- Number of images per generation (1-4)
+- Output format (PNG, JPEG, WebP)
+- Acceleration mode
+- Seed for reproducibility
+- Safety checker toggle
 
 ## License
 
@@ -144,4 +168,5 @@ MIT License - feel free to use this project for personal or commercial purposes.
 ## Acknowledgments
 
 - [Fal.ai](https://fal.ai/) for the amazing Z-Image Turbo model
+- [OpenRouter](https://openrouter.ai/) for AI prompt enhancement
 - [Vercel](https://vercel.com/) for serverless hosting
