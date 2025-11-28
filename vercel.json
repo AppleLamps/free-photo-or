@@ -1,11 +1,13 @@
 {
     "version": 2,
-    "headers": [
-        {
-            "source": "/js/(.*).js",
-            "headers": [
-                { "key": "Content-Type", "value": "application/javascript; charset=utf-8" }
-            ]
-        }
+    "buildCommand": "",
+    "outputDirectory": ".",
+    "framework": null,
+    "installCommand": "npm install",
+    "routes": [
+        { "src": "/favicon.ico", "dest": "/favicon.svg" },
+        { "handle": "filesystem" },
+        { "src": "/api/(.*)", "dest": "/api/$1" },
+        { "src": "/(.*)", "dest": "/$1" }
     ]
 }
