@@ -5,8 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="AI Image Generator - Create stunning images with artificial intelligence">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>AI Image Generator</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/public/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AI Image Gen">
+    <link rel="apple-touch-icon" href="/public/icon-192.svg">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/base.css">
@@ -45,8 +53,14 @@
         <!-- Floating Input Bar -->
         <div class="input-bar">
             <div class="input-bar__container">
-                <textarea id="prompt-input" class="input-bar__input" placeholder="Describe an image to generate..."
-                    rows="1"></textarea>
+                <div class="input-bar__input-row">
+                    <button id="surprise-btn" class="input-bar__icon-btn input-bar__surprise-btn"
+                        title="Surprise me with a random prompt">
+                        🎲
+                    </button>
+                    <textarea id="prompt-input" class="input-bar__input" placeholder="Describe an image to generate..."
+                        rows="1"></textarea>
+                </div>
                 <div class="input-bar__actions">
                     <div class="input-bar__actions-left">
                         <button id="settings-btn" class="input-bar__icon-btn" title="Generation settings">
@@ -205,6 +219,21 @@
 
     <!-- Scripts (ES Modules) -->
     <script type="module" src="js/app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/public/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 
 </html>

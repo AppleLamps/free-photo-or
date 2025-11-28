@@ -265,6 +265,7 @@ function openLightbox(image) {
     const modalPrompt = modal.querySelector('.modal__prompt');
     const downloadBtn = modal.querySelector('.modal__download-btn');
     const copyBtn = modal.querySelector('.modal__copy-btn');
+    const actionsContainer = modal.querySelector('.modal__actions');
 
     if (modalImage) {
         modalImage.src = image.url;
@@ -291,6 +292,26 @@ function openLightbox(image) {
                 console.error('Failed to copy:', err);
             }
         };
+    }
+
+    // Add or update Remix button
+    if (actionsContainer) {
+        // Remove existing remix button if any
+        const existingRemixBtn = actionsContainer.querySelector('.modal__remix-btn');
+        if (existingRemixBtn) {
+            existingRemixBtn.remove();
+        }
+
+        // Create new remix button
+        const remixBtn = createElement('button', {
+            className: 'modal__button modal__remix-btn',
+            onClick: () => {
+                window.dispatchEvent(new CustomEvent('remix-image', { detail: image }));
+            }
+        }, 'Remix ♻️');
+
+        // Insert before download button
+        actionsContainer.insertBefore(remixBtn, downloadBtn);
     }
 
     modal.classList.add('modal--active');

@@ -6,6 +6,7 @@ import { generateImage, enhancePrompt } from './api.js';
 import { state } from './state.js';
 import { generateId } from './utils.js';
 import { initGallery, showPlaceholder, removePlaceholder, removeAllPlaceholders, initLightbox, closeLightbox } from './gallery.js';
+import { getRandomPrompt } from './prompts.js';
 
 /**
  * Get current generation settings from the UI
@@ -65,6 +66,7 @@ function init() {
     const settingsBtn = document.getElementById('settings-btn');
     const settingsPanel = document.getElementById('settings-panel');
     const settingsClose = document.getElementById('settings-close');
+    const surpriseBtn = document.getElementById('surprise-btn');
 
     // Initialize gallery
     if (galleryContainer && emptyState) {
@@ -95,6 +97,11 @@ function init() {
         enhanceBtn.addEventListener('click', () => handleEnhance(promptInput, enhanceBtn));
     }
 
+    // Set up surprise me button listener
+    if (surpriseBtn && promptInput) {
+        surpriseBtn.addEventListener('click', () => handleSurpriseMe(promptInput));
+    }
+
     // Set up settings panel
     if (settingsBtn && settingsPanel) {
         settingsBtn.addEventListener('click', () => toggleSettings(settingsBtn, settingsPanel));
@@ -115,6 +122,9 @@ function init() {
 
     // Initialize settings UI interactions
     initSettingsUI();
+
+    // Listen for remix-image event from lightbox
+    window.addEventListener('remix-image', handleRemixImage);
 
     console.log('AI Image Generator initialized');
 }
@@ -208,13 +218,14 @@ async function handleGenerate(input, button) {
         removeAllPlaceholders();
 
         if (response.images && response.images.length > 0) {
-            // Add each generated image to state
+            // Add each generated image to state with settings for remix
             response.images.forEach((image) => {
                 state.addImage({
                     id: generateId(),
                     url: image.url,
                     prompt: prompt,
-                    createdAt: Date.now()
+                    createdAt: Date.now(),
+                    settings: { ...settings }
                 });
             });
 
@@ -267,6 +278,143 @@ async function handleEnhance(input, button) {
     } finally {
         setEnhanceLoading(button, false);
         input.disabled = false;
+    }
+}
+
+/**
+ * Handle "Surprise Me" button - fill input with random creative prompt
+ * @param {HTMLTextAreaElement} input - Prompt input element
+ */
+async function handleSurpriseMe(input) {
+    const randomPrompt = getRandomPrompt();
+
+    // Clear existing text
+    input.value = '';
+
+    // Typing animation effect
+    let index = 0;
+    const typingSpeed = 15; // ms per character
+
+    const typeNextChar = () => {
+        if (index < randomPrompt.length) {
+            input.value += randomPrompt[index];
+            index++;
+            autoResizeTextarea(input);
+            setTimeout(typeNextChar, typingSpeed);
+        } else {
+            // Done typing - flash and focus
+            flashInput(input);
+            input.focus();
+        }
+    };
+
+    typeNextChar();
+}
+
+/**
+ * Handle remix-image event from lightbox
+ * @param {CustomEvent} event - Custom event with image data
+ */
+function handleRemixImage(event) {
+    const image = event.detail;
+    if (!image) return;
+
+    const promptInput = document.getElementById('prompt-input');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsPanel = document.getElementById('settings-panel');
+
+    // 1. Set the prompt input value
+    if (promptInput) {
+        promptInput.value = image.prompt || '';
+        autoResizeTextarea(promptInput);
+    }
+
+    // 2. Restore settings if available
+    if (image.settings) {
+        restoreSettings(image.settings);
+    }
+
+    // 3. Open the settings panel
+    if (settingsBtn && settingsPanel) {
+        openSettings(settingsBtn, settingsPanel);
+    }
+
+    // 4. Close the lightbox
+    closeLightbox();
+
+    // 5. Flash input to indicate readiness
+    if (promptInput) {
+        flashInput(promptInput);
+        promptInput.focus();
+    }
+}
+
+/**
+ * Restore settings from saved image data
+ * @param {Object} settings - Saved generation settings
+ */
+function restoreSettings(settings) {
+    // Image size
+    const imageSizeSelect = document.getElementById('setting-image-size');
+    const customSizeGroup = document.getElementById('custom-size-group');
+    const widthInput = document.getElementById('setting-width');
+    const heightInput = document.getElementById('setting-height');
+
+    if (imageSizeSelect && settings.image_size) {
+        if (typeof settings.image_size === 'object') {
+            // Custom size
+            imageSizeSelect.value = 'custom';
+            if (customSizeGroup) customSizeGroup.classList.remove('settings-group--hidden');
+            if (widthInput) widthInput.value = settings.image_size.width || 1024;
+            if (heightInput) heightInput.value = settings.image_size.height || 768;
+        } else {
+            imageSizeSelect.value = settings.image_size;
+            if (customSizeGroup) customSizeGroup.classList.add('settings-group--hidden');
+        }
+    }
+
+    // Inference steps
+    const stepsInput = document.getElementById('setting-steps');
+    const stepsValue = document.getElementById('steps-value');
+    if (stepsInput && settings.num_inference_steps !== undefined) {
+        stepsInput.value = settings.num_inference_steps;
+        if (stepsValue) stepsValue.textContent = settings.num_inference_steps;
+    }
+
+    // Number of images
+    const numImagesSelect = document.getElementById('setting-num-images');
+    if (numImagesSelect && settings.num_images !== undefined) {
+        numImagesSelect.value = settings.num_images;
+    }
+
+    // Output format
+    const formatSelect = document.getElementById('setting-format');
+    if (formatSelect && settings.output_format) {
+        formatSelect.value = settings.output_format;
+    }
+
+    // Acceleration
+    const accelerationSelect = document.getElementById('setting-acceleration');
+    if (accelerationSelect && settings.acceleration) {
+        accelerationSelect.value = settings.acceleration;
+    }
+
+    // Seed
+    const seedInput = document.getElementById('setting-seed');
+    if (seedInput) {
+        seedInput.value = settings.seed !== undefined ? settings.seed : '';
+    }
+
+    // Safety checker
+    const safetyCheckbox = document.getElementById('setting-safety');
+    if (safetyCheckbox && settings.enable_safety_checker !== undefined) {
+        safetyCheckbox.checked = settings.enable_safety_checker;
+    }
+
+    // Sync mode
+    const syncCheckbox = document.getElementById('setting-sync');
+    if (syncCheckbox && settings.sync_mode !== undefined) {
+        syncCheckbox.checked = settings.sync_mode;
     }
 }
 

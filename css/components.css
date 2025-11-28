@@ -21,8 +21,21 @@
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
 }
 
+.input-bar__input-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.input-bar__surprise-btn {
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    margin-top: 0;
+}
+
 .input-bar__input {
-    width: 100%;
+    flex: 1;
     background: transparent;
     color: var(--text-primary);
     padding: 0;
