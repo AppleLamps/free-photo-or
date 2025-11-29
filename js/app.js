@@ -89,6 +89,10 @@ function getGenerationSettings() {
         // FLUX.1 [dev] settings
         settings.guidance_scale = parseFloat(guidanceInput?.value || 3.5);
         settings.acceleration = accelerationSelect?.value || 'none';
+    } else if (model === 'flux-kontext-lora-t2i') {
+        // FLUX Kontext LoRA Text-to-Image settings
+        settings.guidance_scale = parseFloat(guidanceInput?.value || 2.5);
+        settings.acceleration = accelerationSelect?.value || 'none';
     } else {
         // Z-Image Turbo settings
         settings.acceleration = accelerationSelect?.value || 'none';
@@ -546,6 +550,41 @@ function updateSettingsForModel(model) {
                 webpOption.disabled = true;
                 if (formatSelect.value === 'webp') {
                     formatSelect.value = 'jpeg';
+                }
+            }
+        }
+    } else if (model === 'flux-kontext-lora-t2i') {
+        // Show FLUX Kontext LoRA Text-to-Image settings
+        guidanceGroup?.classList.remove('settings-group--hidden');
+        negativePromptGroup?.classList.add('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
+        accelerationGroup?.classList.remove('settings-group--hidden');
+
+        // Update guidance scale for FLUX Kontext LoRA T2I (default 2.5)
+        if (guidanceInput && guidanceValue) {
+            guidanceInput.value = '2.5';
+            guidanceValue.textContent = '2.5';
+        }
+
+        // Update steps range for FLUX Kontext LoRA T2I (default 30, max 30)
+        if (stepsInput) {
+            stepsInput.max = '30';
+            stepsInput.value = '30';
+            if (stepsValue) stepsValue.textContent = '30';
+        }
+
+        // Update format options (FLUX Kontext LoRA T2I only supports jpeg/png)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = true;
+                if (formatSelect.value === 'webp') {
+                    formatSelect.value = 'png';
                 }
             }
         }

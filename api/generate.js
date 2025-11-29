@@ -180,6 +180,25 @@ module.exports = async function handler(req, res) {
         if (seed !== undefined && seed !== null && seed !== '') {
             payload.seed = parseInt(seed, 10);
         }
+    } else if (model === 'flux-kontext-lora-t2i') {
+        // FLUX Kontext LoRA Text-to-Image model
+        apiEndpoint = 'https://fal.run/fal-ai/flux-kontext-lora/text-to-image';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            num_inference_steps: parseInt(num_inference_steps, 10) || 30,
+            num_images: parseInt(num_images, 10),
+            enable_safety_checker: false, // Disabled by default
+            output_format: output_format === 'webp' ? 'png' : output_format, // Only supports jpeg/png
+            sync_mode,
+            guidance_scale: parseFloat(guidance_scale) || 2.5,
+            acceleration,
+        };
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
     } else {
         // Z-Image Turbo model (default)
         apiEndpoint = 'https://fal.run/fal-ai/z-image/turbo';
