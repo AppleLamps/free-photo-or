@@ -7,7 +7,7 @@ const ENHANCE_ENDPOINT = '/api/enhance';
 
 /**
  * @typedef {Object} GenerateOptions
- * @property {string} [model] - Model to use (z-image-turbo, qwen-image, flux-kontext)
+ * @property {string} [model] - Model to use (z-image-turbo, hidream-i1-fast, qwen-image, flux-kontext)
  * @property {string} [image_size] - Image size preset or custom dimensions
  * @property {number} [num_inference_steps] - Number of inference steps
  * @property {number} [seed] - Seed for reproducibility
@@ -17,7 +17,7 @@ const ENHANCE_ENDPOINT = '/api/enhance';
  * @property {string} [output_format] - Output format (png, jpeg, webp)
  * @property {string} [acceleration] - Acceleration level (none, regular, high)
  * @property {number} [guidance_scale] - CFG scale (Qwen, FLUX Kontext)
- * @property {string} [negative_prompt] - Negative prompt (Qwen only)
+ * @property {string} [negative_prompt] - Negative prompt (Qwen, HiDream)
  * @property {boolean} [use_turbo] - Turbo mode (Qwen only)
  * @property {string} [image_url] - Input image URL or data URI for editing (Qwen, FLUX Kontext)
  * @property {string} [aspect_ratio] - Aspect ratio (FLUX Kontext only)

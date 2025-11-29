@@ -111,6 +111,28 @@ module.exports = async function handler(req, res) {
         if (seed !== undefined && seed !== null && seed !== '') {
             payload.seed = parseInt(seed, 10);
         }
+    } else if (model === 'hidream-i1-fast') {
+        // HiDream I1 Fast model
+        apiEndpoint = 'https://fal.run/fal-ai/hidream-i1-fast';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            num_inference_steps: parseInt(num_inference_steps, 10) || 50,
+            num_images: parseInt(num_images, 10),
+            enable_safety_checker: false, // Disabled by default for HiDream
+            output_format: output_format === 'webp' ? 'jpeg' : output_format, // HiDream only supports jpeg/png
+            sync_mode,
+        };
+
+        // Add negative prompt if provided
+        if (negative_prompt && negative_prompt.trim() !== '') {
+            payload.negative_prompt = negative_prompt.trim();
+        }
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
     } else {
         // Z-Image Turbo model (default)
         apiEndpoint = 'https://fal.run/fal-ai/z-image/turbo';

@@ -71,6 +71,12 @@ function getGenerationSettings() {
         if (inputImageDataUri) {
             settings.image_url = inputImageDataUri;
         }
+    } else if (model === 'hidream-i1-fast') {
+        // HiDream I1 Fast settings
+        const negativePrompt = negativePromptInput?.value?.trim();
+        if (negativePrompt) {
+            settings.negative_prompt = negativePrompt;
+        }
     } else {
         // Z-Image Turbo settings
         settings.acceleration = accelerationSelect?.value || 'none';
@@ -423,6 +429,35 @@ function updateSettingsForModel(model) {
         }
 
         // Update format options (Kontext only supports jpeg/png)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = true;
+                if (formatSelect.value === 'webp') {
+                    formatSelect.value = 'jpeg';
+                }
+            }
+        }
+    } else if (model === 'hidream-i1-fast') {
+        // Show HiDream I1 Fast settings
+        guidanceGroup?.classList.add('settings-group--hidden');
+        negativePromptGroup?.classList.remove('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+
+        // Update steps range for HiDream (default 50 for best quality)
+        if (stepsInput) {
+            stepsInput.max = '50';
+            stepsInput.value = '50';
+            if (stepsValue) stepsValue.textContent = '50';
+        }
+
+        // Update format options (HiDream only supports jpeg/png)
         if (formatSelect) {
             const webpOption = formatSelect.querySelector('option[value="webp"]');
             if (webpOption) {
