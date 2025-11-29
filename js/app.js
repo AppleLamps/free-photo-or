@@ -85,6 +85,10 @@ function getGenerationSettings() {
         if (negativePrompt) {
             settings.negative_prompt = negativePrompt;
         }
+    } else if (model === 'flux-dev') {
+        // FLUX.1 [dev] settings
+        settings.guidance_scale = parseFloat(guidanceInput?.value || 3.5);
+        settings.acceleration = accelerationSelect?.value || 'none';
     } else {
         // Z-Image Turbo settings
         settings.acceleration = accelerationSelect?.value || 'none';
@@ -507,6 +511,41 @@ function updateSettingsForModel(model) {
                 webpOption.disabled = true;
                 if (formatSelect.value === 'webp') {
                     formatSelect.value = 'png';
+                }
+            }
+        }
+    } else if (model === 'flux-dev') {
+        // Show FLUX.1 [dev] settings
+        guidanceGroup?.classList.remove('settings-group--hidden');
+        negativePromptGroup?.classList.add('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
+        accelerationGroup?.classList.remove('settings-group--hidden');
+
+        // Update guidance scale for FLUX.1 [dev] (default 3.5)
+        if (guidanceInput && guidanceValue) {
+            guidanceInput.value = '3.5';
+            guidanceValue.textContent = '3.5';
+        }
+
+        // Update steps range for FLUX.1 [dev] (default 28, max 50)
+        if (stepsInput) {
+            stepsInput.max = '50';
+            stepsInput.value = '50';
+            if (stepsValue) stepsValue.textContent = '50';
+        }
+
+        // Update format options (FLUX.1 [dev] only supports jpeg/png)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = true;
+                if (formatSelect.value === 'webp') {
+                    formatSelect.value = 'jpeg';
                 }
             }
         }

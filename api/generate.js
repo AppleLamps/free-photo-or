@@ -161,6 +161,25 @@ module.exports = async function handler(req, res) {
         if (seed !== undefined && seed !== null && seed !== '') {
             payload.seed = parseInt(seed, 10);
         }
+    } else if (model === 'flux-dev') {
+        // FLUX.1 [dev] model
+        apiEndpoint = 'https://fal.run/fal-ai/flux/dev';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            num_inference_steps: parseInt(num_inference_steps, 10) || 50,
+            num_images: parseInt(num_images, 10),
+            enable_safety_checker: false, // Disabled by default for FLUX.1 [dev]
+            output_format: output_format === 'webp' ? 'jpeg' : output_format, // FLUX.1 [dev] only supports jpeg/png
+            sync_mode,
+            guidance_scale: parseFloat(guidance_scale) || 3.5,
+            acceleration,
+        };
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
     } else {
         // Z-Image Turbo model (default)
         apiEndpoint = 'https://fal.run/fal-ai/z-image/turbo';
