@@ -28,8 +28,14 @@ function getGenerationSettings() {
     const guidanceInput = document.getElementById('setting-guidance');
     const negativePromptInput = document.getElementById('setting-negative-prompt');
     const turboCheckbox = document.getElementById('setting-turbo');
+    // FLUX Kontext elements
+    const aspectRatioSelect = document.getElementById('setting-aspect-ratio');
+    const enhancePromptCheckbox = document.getElementById('setting-enhance-prompt');
 
     const model = modelSelect?.value || 'z-image-turbo';
+
+    // Get input image data URI if available (stored globally)
+    const inputImageDataUri = window.__inputImageDataUri || null;
 
     const settings = {
         model,
@@ -51,6 +57,20 @@ function getGenerationSettings() {
         }
         // Qwen also supports acceleration
         settings.acceleration = accelerationSelect?.value || 'none';
+        // Add input image if available
+        if (inputImageDataUri) {
+            settings.image_url = inputImageDataUri;
+        }
+    } else if (model === 'flux-kontext') {
+        // FLUX Kontext settings
+        settings.guidance_scale = parseFloat(guidanceInput?.value || 3.5);
+        settings.aspect_ratio = aspectRatioSelect?.value || '1:1';
+        settings.enhance_prompt = enhancePromptCheckbox?.checked ?? false;
+        settings.safety_tolerance = '5'; // More permissive safety level
+        // Input image is required for Kontext
+        if (inputImageDataUri) {
+            settings.image_url = inputImageDataUri;
+        }
     } else {
         // Z-Image Turbo settings
         settings.acceleration = accelerationSelect?.value || 'none';
@@ -202,6 +222,118 @@ function initSettingsUI() {
             guidanceValue.textContent = guidanceInput.value;
         });
     }
+
+    // Initialize image upload handlers
+    initImageUpload();
+}
+
+/**
+ * Initialize image upload handlers for Qwen image editing
+ */
+function initImageUpload() {
+    const imageInput = document.getElementById('setting-input-image');
+    const imageLabel = document.getElementById('image-upload-label');
+    const imagePreview = document.getElementById('image-preview');
+    const imagePreviewImg = document.getElementById('image-preview-img');
+    const imageClearBtn = document.getElementById('image-preview-clear');
+
+    // Initialize global storage for image data URI
+    window.__inputImageDataUri = null;
+
+    if (!imageInput || !imageLabel || !imagePreview || !imagePreviewImg || !imageClearBtn) {
+        return;
+    }
+
+    // Handle file selection
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            handleImageFile(file, imageLabel, imagePreview, imagePreviewImg);
+        }
+    });
+
+    // Handle drag and drop
+    imageLabel.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        imageLabel.classList.add('image-upload__label--dragover');
+    });
+
+    imageLabel.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        imageLabel.classList.remove('image-upload__label--dragover');
+    });
+
+    imageLabel.addEventListener('drop', (e) => {
+        e.preventDefault();
+        imageLabel.classList.remove('image-upload__label--dragover');
+        const file = e.dataTransfer?.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            handleImageFile(file, imageLabel, imagePreview, imagePreviewImg);
+            // Update the input to reflect the dropped file
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            imageInput.files = dataTransfer.files;
+        }
+    });
+
+    // Handle clear button
+    imageClearBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clearImageUpload(imageInput, imageLabel, imagePreview, imagePreviewImg);
+    });
+}
+
+/**
+ * Handle an uploaded image file
+ * @param {File} file - The image file
+ * @param {HTMLElement} label - The upload label element
+ * @param {HTMLElement} preview - The preview container
+ * @param {HTMLImageElement} previewImg - The preview image element
+ */
+function handleImageFile(file, label, preview, previewImg) {
+    if (!file.type.startsWith('image/')) {
+        showError('Please select a valid image file');
+        return;
+    }
+
+    // Limit file size to 10MB
+    if (file.size > 10 * 1024 * 1024) {
+        showError('Image file is too large (max 10MB)');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dataUri = e.target?.result;
+        if (dataUri) {
+            // Store the data URI globally
+            window.__inputImageDataUri = dataUri;
+            // Show preview
+            previewImg.src = dataUri;
+            preview.classList.remove('image-upload__preview--hidden');
+            label.style.display = 'none';
+        }
+    };
+    reader.onerror = () => {
+        showError('Failed to read image file');
+    };
+    reader.readAsDataURL(file);
+}
+
+/**
+ * Clear the uploaded image
+ * @param {HTMLInputElement} input - The file input
+ * @param {HTMLElement} label - The upload label element
+ * @param {HTMLElement} preview - The preview container
+ * @param {HTMLImageElement} previewImg - The preview image element
+ */
+function clearImageUpload(input, label, preview, previewImg) {
+    window.__inputImageDataUri = null;
+    input.value = '';
+    previewImg.src = '';
+    preview.classList.add('image-upload__preview--hidden');
+    label.style.display = 'flex';
 }
 
 /**
@@ -213,16 +345,40 @@ function updateSettingsForModel(model) {
     const stepsInput = document.getElementById('setting-steps');
     const stepsValue = document.getElementById('steps-value');
     const guidanceGroup = document.getElementById('guidance-group');
+    const guidanceInput = document.getElementById('setting-guidance');
+    const guidanceValue = document.getElementById('guidance-value');
     const negativePromptGroup = document.getElementById('negative-prompt-group');
     const turboGroup = document.getElementById('turbo-group');
     const accelerationGroup = document.getElementById('acceleration-group');
     const formatSelect = document.getElementById('setting-format');
+    const inputImageGroup = document.getElementById('input-image-group');
+    const inputImageHint = document.getElementById('input-image-hint');
+    const imageSizeGroup = document.getElementById('image-size-group');
+    const aspectRatioGroup = document.getElementById('aspect-ratio-group');
+    const enhancePromptGroup = document.getElementById('enhance-prompt-group');
 
     if (model === 'qwen-image') {
         // Show Qwen-specific settings
         guidanceGroup?.classList.remove('settings-group--hidden');
         negativePromptGroup?.classList.remove('settings-group--hidden');
         turboGroup?.classList.remove('settings-group--hidden');
+        inputImageGroup?.classList.remove('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
+        accelerationGroup?.classList.remove('settings-group--hidden');
+
+        // Update hint for optional image
+        if (inputImageHint) {
+            inputImageHint.textContent = 'Optional: Upload an image to edit with your prompt';
+        }
+
+        // Update guidance scale for Qwen (default 2.5)
+        if (guidanceInput && guidanceValue) {
+            guidanceInput.value = '2.5';
+            guidanceValue.textContent = '2.5';
+        }
 
         // Update steps range for Qwen (default 30, max higher)
         if (stepsInput) {
@@ -232,9 +388,6 @@ function updateSettingsForModel(model) {
                 if (stepsValue) stepsValue.textContent = '30';
             }
         }
-
-        // Show acceleration (Qwen supports it too)
-        accelerationGroup?.classList.remove('settings-group--hidden');
 
         // Update format options (Qwen only supports png/jpeg)
         if (formatSelect) {
@@ -246,11 +399,49 @@ function updateSettingsForModel(model) {
                 }
             }
         }
+    } else if (model === 'flux-kontext') {
+        // Show FLUX Kontext settings
+        guidanceGroup?.classList.remove('settings-group--hidden');
+        negativePromptGroup?.classList.add('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.remove('settings-group--hidden');
+        imageSizeGroup?.classList.add('settings-group--hidden');
+        aspectRatioGroup?.classList.remove('settings-group--hidden');
+        enhancePromptGroup?.classList.remove('settings-group--hidden');
+        stepsGroup?.classList.add('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+
+        // Update hint for required image
+        if (inputImageHint) {
+            inputImageHint.textContent = 'Required: Upload an image to edit';
+        }
+
+        // Update guidance scale for Kontext (default 3.5)
+        if (guidanceInput && guidanceValue) {
+            guidanceInput.value = '3.5';
+            guidanceValue.textContent = '3.5';
+        }
+
+        // Update format options (Kontext only supports jpeg/png)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = true;
+                if (formatSelect.value === 'webp') {
+                    formatSelect.value = 'jpeg';
+                }
+            }
+        }
     } else {
-        // Show Z-Image Turbo settings
+        // Show Z-Image Turbo settings (default)
         guidanceGroup?.classList.add('settings-group--hidden');
         negativePromptGroup?.classList.add('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.remove('settings-group--hidden');
 
         // Reset steps range for Z-Image Turbo

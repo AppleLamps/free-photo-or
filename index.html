@@ -105,11 +105,12 @@
                     <select id="setting-model" class="settings-select">
                         <option value="z-image-turbo" selected>Z-Image Turbo (Fast)</option>
                         <option value="qwen-image">Qwen Image (Text Rendering)</option>
+                        <option value="flux-kontext">FLUX Kontext (Image Editing)</option>
                     </select>
                 </div>
 
                 <!-- Image Size -->
-                <div class="settings-group">
+                <div class="settings-group" id="image-size-group">
                     <label class="settings-label">Image Size</label>
                     <select id="setting-image-size" class="settings-select">
                         <option value="square_hd" selected>Square HD</option>
@@ -119,6 +120,22 @@
                         <option value="landscape_4_3">Landscape 4:3</option>
                         <option value="landscape_16_9">Landscape 16:9</option>
                         <option value="custom">Custom Size</option>
+                    </select>
+                </div>
+
+                <!-- Aspect Ratio (FLUX Kontext only) -->
+                <div class="settings-group settings-group--hidden" id="aspect-ratio-group">
+                    <label class="settings-label">Aspect Ratio</label>
+                    <select id="setting-aspect-ratio" class="settings-select">
+                        <option value="1:1" selected>1:1 (Square)</option>
+                        <option value="4:3">4:3 (Landscape)</option>
+                        <option value="3:4">3:4 (Portrait)</option>
+                        <option value="16:9">16:9 (Widescreen)</option>
+                        <option value="9:16">9:16 (Vertical)</option>
+                        <option value="3:2">3:2</option>
+                        <option value="2:3">2:3</option>
+                        <option value="21:9">21:9 (Ultrawide)</option>
+                        <option value="9:21">9:21</option>
                     </select>
                 </div>
 
@@ -164,6 +181,32 @@
                         <input type="checkbox" id="setting-turbo">
                         <span>Turbo Mode (10 steps, faster)</span>
                     </label>
+                </div>
+
+                <!-- Enhance Prompt (FLUX Kontext only) -->
+                <div class="settings-group settings-group--hidden" id="enhance-prompt-group">
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="setting-enhance-prompt">
+                        <span>Enhance Prompt</span>
+                    </label>
+                </div>
+
+                <!-- Input Image for Editing (Qwen only) -->
+                <div class="settings-group settings-group--hidden" id="input-image-group">
+                    <label class="settings-label">Input Image (for editing)</label>
+                    <div class="image-upload">
+                        <input type="file" id="setting-input-image" class="image-upload__input" accept="image/*">
+                        <label for="setting-input-image" class="image-upload__label" id="image-upload-label">
+                            <span class="image-upload__icon">📷</span>
+                            <span class="image-upload__text">Choose image or drag here</span>
+                        </label>
+                        <div id="image-preview" class="image-upload__preview image-upload__preview--hidden">
+                            <img id="image-preview-img" src="" alt="Preview">
+                            <button type="button" id="image-preview-clear" class="image-upload__clear">✕</button>
+                        </div>
+                    </div>
+                    <p class="settings-hint" id="input-image-hint">Optional: Upload an image to edit with your prompt
+                    </p>
                 </div>
 
                 <!-- Number of Images -->

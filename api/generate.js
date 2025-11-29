@@ -28,7 +28,12 @@ module.exports = async function handler(req, res) {
         // Qwen-specific parameters
         guidance_scale = 2.5,
         negative_prompt = '',
-        use_turbo = false
+        use_turbo = false,
+        image_url = null,
+        // FLUX Kontext parameters
+        aspect_ratio = '1:1',
+        safety_tolerance = '2',
+        enhance_prompt = false
     } = req.body;
 
     if (!prompt || typeof prompt !== 'string') {
@@ -73,6 +78,38 @@ module.exports = async function handler(req, res) {
         // Add acceleration if provided (Qwen supports none, regular, high)
         if (acceleration && acceleration !== 'none') {
             payload.acceleration = acceleration;
+        }
+
+        // Add input image URL if provided (for image editing)
+        if (image_url) {
+            payload.image_url = image_url;
+        }
+    } else if (model === 'flux-kontext') {
+        // FLUX.1 Kontext [pro] model - requires image_url
+        if (!image_url) {
+            return res.status(400).json({ error: 'FLUX Kontext requires an input image' });
+        }
+
+        apiEndpoint = 'https://fal.run/fal-ai/flux-pro/kontext';
+        payload = {
+            prompt: prompt.trim(),
+            image_url,
+            num_images: parseInt(num_images, 10),
+            output_format: output_format === 'webp' ? 'jpeg' : output_format, // Kontext only supports jpeg/png
+            sync_mode,
+            guidance_scale: parseFloat(guidance_scale),
+            safety_tolerance: safety_tolerance,
+            enhance_prompt,
+        };
+
+        // Add aspect ratio if provided
+        if (aspect_ratio) {
+            payload.aspect_ratio = aspect_ratio;
+        }
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
         }
     } else {
         // Z-Image Turbo model (default)

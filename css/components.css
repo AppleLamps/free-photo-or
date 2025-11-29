@@ -608,6 +608,109 @@
     cursor: pointer;
 }
 
+/* Image Upload */
+.image-upload {
+    position: relative;
+}
+
+.image-upload__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.image-upload__label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius-md);
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.image-upload__label:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-secondary);
+}
+
+.image-upload__label--dragover {
+    border-color: var(--accent-primary);
+    background: var(--bg-secondary);
+}
+
+.image-upload__input:focus+.image-upload__label {
+    border-color: var(--accent-primary);
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+.image-upload__icon {
+    font-size: 1.5rem;
+}
+
+.image-upload__text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.image-upload__preview {
+    position: relative;
+    margin-top: var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+}
+
+.image-upload__preview--hidden {
+    display: none;
+}
+
+.image-upload__preview img {
+    width: 100%;
+    max-height: 150px;
+    object-fit: contain;
+    border-radius: var(--border-radius-md);
+    background: var(--bg-tertiary);
+}
+
+.image-upload__clear {
+    position: absolute;
+    top: var(--spacing-xs);
+    right: var(--spacing-xs);
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: var(--transition-fast);
+}
+
+.image-upload__clear:hover {
+    opacity: 1;
+    background: var(--error-color);
+    color: white;
+}
+
+.settings-hint {
+    margin-top: var(--spacing-xs);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
 /* Settings button active state */
 .input-bar__icon-btn--active {
     color: var(--text-primary);
