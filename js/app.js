@@ -77,6 +77,14 @@ function getGenerationSettings() {
         if (negativePrompt) {
             settings.negative_prompt = negativePrompt;
         }
+    } else if (model === 'hunyuan-image') {
+        // Hunyuan Image 3.0 settings
+        settings.guidance_scale = parseFloat(guidanceInput?.value || 7.5);
+        settings.enable_prompt_expansion = enhancePromptCheckbox?.checked ?? false;
+        const negativePrompt = negativePromptInput?.value?.trim();
+        if (negativePrompt) {
+            settings.negative_prompt = negativePrompt;
+        }
     } else {
         // Z-Image Turbo settings
         settings.acceleration = accelerationSelect?.value || 'none';
@@ -464,6 +472,41 @@ function updateSettingsForModel(model) {
                 webpOption.disabled = true;
                 if (formatSelect.value === 'webp') {
                     formatSelect.value = 'jpeg';
+                }
+            }
+        }
+    } else if (model === 'hunyuan-image') {
+        // Show Hunyuan Image 3.0 settings
+        guidanceGroup?.classList.remove('settings-group--hidden');
+        negativePromptGroup?.classList.remove('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.remove('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+
+        // Update guidance scale for Hunyuan (default 7.5)
+        if (guidanceInput && guidanceValue) {
+            guidanceInput.value = '7.5';
+            guidanceValue.textContent = '7.5';
+        }
+
+        // Update steps range for Hunyuan (default 28)
+        if (stepsInput) {
+            stepsInput.max = '50';
+            stepsInput.value = '28';
+            if (stepsValue) stepsValue.textContent = '28';
+        }
+
+        // Update format options (Hunyuan only supports jpeg/png)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = true;
+                if (formatSelect.value === 'webp') {
+                    formatSelect.value = 'png';
                 }
             }
         }

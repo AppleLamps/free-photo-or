@@ -133,6 +133,34 @@ module.exports = async function handler(req, res) {
         if (seed !== undefined && seed !== null && seed !== '') {
             payload.seed = parseInt(seed, 10);
         }
+    } else if (model === 'hunyuan-image') {
+        // Hunyuan Image 3.0 model
+        apiEndpoint = 'https://fal.run/fal-ai/hunyuan-image/v3/text-to-image';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            num_inference_steps: parseInt(num_inference_steps, 10) || 28,
+            num_images: parseInt(num_images, 10),
+            enable_safety_checker: false, // Disabled by default for Hunyuan
+            output_format: output_format === 'webp' ? 'png' : output_format, // Hunyuan only supports jpeg/png
+            sync_mode,
+            guidance_scale: parseFloat(guidance_scale) || 7.5,
+        };
+
+        // Add negative prompt if provided
+        if (negative_prompt && negative_prompt.trim() !== '') {
+            payload.negative_prompt = negative_prompt.trim();
+        }
+
+        // Add enable_prompt_expansion if provided
+        if (enhance_prompt !== undefined) {
+            payload.enable_prompt_expansion = enhance_prompt;
+        }
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
     } else {
         // Z-Image Turbo model (default)
         apiEndpoint = 'https://fal.run/fal-ai/z-image/turbo';
