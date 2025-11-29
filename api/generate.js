@@ -199,6 +199,23 @@ module.exports = async function handler(req, res) {
         if (seed !== undefined && seed !== null && seed !== '') {
             payload.seed = parseInt(seed, 10);
         }
+    } else if (model === 'piflow') {
+        // Piflow model - fast with good quality
+        apiEndpoint = 'https://fal.run/fal-ai/piflow';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            num_inference_steps: parseInt(num_inference_steps, 10) || 8,
+            num_images: parseInt(num_images, 10),
+            enable_safety_checker: false, // Disabled by default
+            output_format: output_format === 'webp' ? 'jpeg' : output_format, // Only supports jpeg/png
+            sync_mode,
+        };
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
     } else {
         // Z-Image Turbo model (default)
         apiEndpoint = 'https://fal.run/fal-ai/z-image/turbo';

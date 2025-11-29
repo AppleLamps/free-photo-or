@@ -93,6 +93,8 @@ function getGenerationSettings() {
         // FLUX Kontext LoRA Text-to-Image settings
         settings.guidance_scale = parseFloat(guidanceInput?.value || 2.5);
         settings.acceleration = accelerationSelect?.value || 'none';
+    } else if (model === 'piflow') {
+        // Piflow settings - simple model with minimal params
     } else {
         // Z-Image Turbo settings
         settings.acceleration = accelerationSelect?.value || 'none';
@@ -585,6 +587,35 @@ function updateSettingsForModel(model) {
                 webpOption.disabled = true;
                 if (formatSelect.value === 'webp') {
                     formatSelect.value = 'png';
+                }
+            }
+        }
+    } else if (model === 'piflow') {
+        // Show Piflow settings - minimal options
+        guidanceGroup?.classList.add('settings-group--hidden');
+        negativePromptGroup?.classList.add('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+
+        // Update steps range for Piflow (default 8, max 8)
+        if (stepsInput) {
+            stepsInput.max = '8';
+            stepsInput.value = '8';
+            if (stepsValue) stepsValue.textContent = '8';
+        }
+
+        // Update format options (Piflow only supports jpeg/png)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = true;
+                if (formatSelect.value === 'webp') {
+                    formatSelect.value = 'jpeg';
                 }
             }
         }
