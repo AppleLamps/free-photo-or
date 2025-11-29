@@ -7,6 +7,7 @@ const ENHANCE_ENDPOINT = '/api/enhance';
 
 /**
  * @typedef {Object} GenerateOptions
+ * @property {string} [model] - Model to use (z-image-turbo, qwen-image)
  * @property {string} [image_size] - Image size preset or custom dimensions
  * @property {number} [num_inference_steps] - Number of inference steps
  * @property {number} [seed] - Seed for reproducibility
@@ -15,6 +16,9 @@ const ENHANCE_ENDPOINT = '/api/enhance';
  * @property {boolean} [enable_safety_checker] - Enable safety checker
  * @property {string} [output_format] - Output format (png, jpeg, webp)
  * @property {string} [acceleration] - Acceleration level (none, regular, high)
+ * @property {number} [guidance_scale] - CFG scale (Qwen only)
+ * @property {string} [negative_prompt] - Negative prompt (Qwen only)
+ * @property {boolean} [use_turbo] - Turbo mode (Qwen only)
  */
 
 /**

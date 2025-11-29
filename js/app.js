@@ -13,6 +13,7 @@ import { getRandomPrompt } from './prompts.js';
  * @returns {Object} Generation options
  */
 function getGenerationSettings() {
+    const modelSelect = document.getElementById('setting-model');
     const imageSizeSelect = document.getElementById('setting-image-size');
     const stepsInput = document.getElementById('setting-steps');
     const numImagesSelect = document.getElementById('setting-num-images');
@@ -23,15 +24,37 @@ function getGenerationSettings() {
     const syncCheckbox = document.getElementById('setting-sync');
     const widthInput = document.getElementById('setting-width');
     const heightInput = document.getElementById('setting-height');
+    // Qwen-specific elements
+    const guidanceInput = document.getElementById('setting-guidance');
+    const negativePromptInput = document.getElementById('setting-negative-prompt');
+    const turboCheckbox = document.getElementById('setting-turbo');
+
+    const model = modelSelect?.value || 'z-image-turbo';
 
     const settings = {
+        model,
         num_inference_steps: parseInt(stepsInput?.value || 30, 10),
         num_images: parseInt(numImagesSelect?.value || 2, 10),
         output_format: formatSelect?.value || 'webp',
-        acceleration: accelerationSelect?.value || 'none',
         enable_safety_checker: safetyCheckbox?.checked ?? false,
         sync_mode: syncCheckbox?.checked ?? false,
     };
+
+    // Model-specific settings
+    if (model === 'qwen-image') {
+        // Qwen-specific settings
+        settings.guidance_scale = parseFloat(guidanceInput?.value || 2.5);
+        settings.use_turbo = turboCheckbox?.checked ?? false;
+        const negativePrompt = negativePromptInput?.value?.trim();
+        if (negativePrompt) {
+            settings.negative_prompt = negativePrompt;
+        }
+        // Qwen also supports acceleration
+        settings.acceleration = accelerationSelect?.value || 'none';
+    } else {
+        // Z-Image Turbo settings
+        settings.acceleration = accelerationSelect?.value || 'none';
+    }
 
     // Handle image size
     const imageSizeValue = imageSizeSelect?.value || 'square_hd';
@@ -133,10 +156,27 @@ function init() {
  * Initialize settings UI interactions
  */
 function initSettingsUI() {
+    const modelSelect = document.getElementById('setting-model');
     const imageSizeSelect = document.getElementById('setting-image-size');
     const customSizeGroup = document.getElementById('custom-size-group');
     const stepsInput = document.getElementById('setting-steps');
     const stepsValue = document.getElementById('steps-value');
+    const guidanceInput = document.getElementById('setting-guidance');
+    const guidanceValue = document.getElementById('guidance-value');
+
+    // Model-specific settings groups
+    const stepsGroup = document.getElementById('steps-group');
+    const guidanceGroup = document.getElementById('guidance-group');
+    const negativePromptGroup = document.getElementById('negative-prompt-group');
+    const turboGroup = document.getElementById('turbo-group');
+    const accelerationGroup = document.getElementById('acceleration-group');
+
+    // Toggle settings based on model selection
+    if (modelSelect) {
+        modelSelect.addEventListener('change', () => {
+            updateSettingsForModel(modelSelect.value);
+        });
+    }
 
     // Toggle custom size fields
     if (imageSizeSelect && customSizeGroup) {
@@ -154,6 +194,81 @@ function initSettingsUI() {
         stepsInput.addEventListener('input', () => {
             stepsValue.textContent = stepsInput.value;
         });
+    }
+
+    // Update guidance value display
+    if (guidanceInput && guidanceValue) {
+        guidanceInput.addEventListener('input', () => {
+            guidanceValue.textContent = guidanceInput.value;
+        });
+    }
+}
+
+/**
+ * Update visible settings based on selected model
+ * @param {string} model - The selected model ID
+ */
+function updateSettingsForModel(model) {
+    const stepsGroup = document.getElementById('steps-group');
+    const stepsInput = document.getElementById('setting-steps');
+    const stepsValue = document.getElementById('steps-value');
+    const guidanceGroup = document.getElementById('guidance-group');
+    const negativePromptGroup = document.getElementById('negative-prompt-group');
+    const turboGroup = document.getElementById('turbo-group');
+    const accelerationGroup = document.getElementById('acceleration-group');
+    const formatSelect = document.getElementById('setting-format');
+
+    if (model === 'qwen-image') {
+        // Show Qwen-specific settings
+        guidanceGroup?.classList.remove('settings-group--hidden');
+        negativePromptGroup?.classList.remove('settings-group--hidden');
+        turboGroup?.classList.remove('settings-group--hidden');
+
+        // Update steps range for Qwen (default 30, max higher)
+        if (stepsInput) {
+            stepsInput.max = '50';
+            if (parseInt(stepsInput.value) > 50) {
+                stepsInput.value = '30';
+                if (stepsValue) stepsValue.textContent = '30';
+            }
+        }
+
+        // Show acceleration (Qwen supports it too)
+        accelerationGroup?.classList.remove('settings-group--hidden');
+
+        // Update format options (Qwen only supports png/jpeg)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = true;
+                if (formatSelect.value === 'webp') {
+                    formatSelect.value = 'png';
+                }
+            }
+        }
+    } else {
+        // Show Z-Image Turbo settings
+        guidanceGroup?.classList.add('settings-group--hidden');
+        negativePromptGroup?.classList.add('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        accelerationGroup?.classList.remove('settings-group--hidden');
+
+        // Reset steps range for Z-Image Turbo
+        if (stepsInput) {
+            stepsInput.max = '30';
+            if (parseInt(stepsInput.value) > 30) {
+                stepsInput.value = '30';
+                if (stepsValue) stepsValue.textContent = '30';
+            }
+        }
+
+        // Re-enable webp format
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = false;
+            }
+        }
     }
 }
 

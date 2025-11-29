@@ -99,6 +99,15 @@
                 <button id="settings-close" class="settings-panel__close">✕</button>
             </div>
             <div class="settings-panel__content">
+                <!-- Model Selection -->
+                <div class="settings-group">
+                    <label class="settings-label">Model</label>
+                    <select id="setting-model" class="settings-select">
+                        <option value="z-image-turbo" selected>Z-Image Turbo (Fast)</option>
+                        <option value="qwen-image">Qwen Image (Text Rendering)</option>
+                    </select>
+                </div>
+
                 <!-- Image Size -->
                 <div class="settings-group">
                     <label class="settings-label">Image Size</label>
@@ -130,9 +139,31 @@
                 </div>
 
                 <!-- Inference Steps -->
-                <div class="settings-group">
+                <div class="settings-group" id="steps-group">
                     <label class="settings-label">Inference Steps: <span id="steps-value">30</span></label>
                     <input type="range" id="setting-steps" class="settings-range" value="30" min="1" max="30" step="1">
+                </div>
+
+                <!-- Guidance Scale (Qwen only) -->
+                <div class="settings-group settings-group--hidden" id="guidance-group">
+                    <label class="settings-label">Guidance Scale: <span id="guidance-value">2.5</span></label>
+                    <input type="range" id="setting-guidance" class="settings-range" value="2.5" min="1" max="10"
+                        step="0.1">
+                </div>
+
+                <!-- Negative Prompt (Qwen only) -->
+                <div class="settings-group settings-group--hidden" id="negative-prompt-group">
+                    <label class="settings-label">Negative Prompt</label>
+                    <textarea id="setting-negative-prompt" class="settings-textarea"
+                        placeholder="blurry, ugly, low quality" rows="2"></textarea>
+                </div>
+
+                <!-- Turbo Mode (Qwen only) -->
+                <div class="settings-group settings-group--hidden" id="turbo-group">
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="setting-turbo">
+                        <span>Turbo Mode (10 steps, faster)</span>
+                    </label>
                 </div>
 
                 <!-- Number of Images -->
@@ -156,8 +187,8 @@
                     </select>
                 </div>
 
-                <!-- Acceleration -->
-                <div class="settings-group">
+                <!-- Acceleration (Z-Image only) -->
+                <div class="settings-group" id="acceleration-group">
                     <label class="settings-label">Acceleration</label>
                     <select id="setting-acceleration" class="settings-select">
                         <option value="none" selected>None (Best Quality)</option>

@@ -16,6 +16,7 @@ module.exports = async function handler(req, res) {
 
     const {
         prompt,
+        model = 'z-image-turbo',
         image_size = 'landscape_4_3',
         num_inference_steps = 30,
         num_images = 1,
@@ -23,7 +24,11 @@ module.exports = async function handler(req, res) {
         output_format = 'png',
         enable_safety_checker = true,
         sync_mode = false,
-        acceleration = 'none'
+        acceleration = 'none',
+        // Qwen-specific parameters
+        guidance_scale = 2.5,
+        negative_prompt = '',
+        use_turbo = false
     } = req.body;
 
     if (!prompt || typeof prompt !== 'string') {
@@ -36,25 +41,61 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ error: 'FAL_KEY environment variable is not configured' });
     }
 
-    // Build request payload with configurable parameters
-    const payload = {
-        prompt: prompt.trim(),
-        image_size,
-        num_inference_steps: parseInt(num_inference_steps, 10),
-        num_images: parseInt(num_images, 10),
-        enable_safety_checker,
-        output_format,
-        sync_mode,
-        acceleration,
-    };
+    // Determine API endpoint and build payload based on model
+    let apiEndpoint;
+    let payload;
 
-    // Only include seed if provided
-    if (seed !== undefined && seed !== null && seed !== '') {
-        payload.seed = parseInt(seed, 10);
+    if (model === 'qwen-image') {
+        // Qwen Image model
+        apiEndpoint = 'https://fal.run/fal-ai/qwen-image';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            num_inference_steps: parseInt(num_inference_steps, 10),
+            num_images: parseInt(num_images, 10),
+            enable_safety_checker,
+            output_format: output_format === 'webp' ? 'png' : output_format, // Qwen only supports png/jpeg
+            sync_mode,
+            guidance_scale: parseFloat(guidance_scale),
+            use_turbo,
+        };
+
+        // Add negative prompt if provided
+        if (negative_prompt && negative_prompt.trim() !== '') {
+            payload.negative_prompt = negative_prompt.trim();
+        }
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
+
+        // Add acceleration if provided (Qwen supports none, regular, high)
+        if (acceleration && acceleration !== 'none') {
+            payload.acceleration = acceleration;
+        }
+    } else {
+        // Z-Image Turbo model (default)
+        apiEndpoint = 'https://fal.run/fal-ai/z-image/turbo';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            num_inference_steps: parseInt(num_inference_steps, 10),
+            num_images: parseInt(num_images, 10),
+            enable_safety_checker,
+            output_format,
+            sync_mode,
+            acceleration,
+        };
+
+        // Only include seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
     }
 
     try {
-        const response = await fetch('https://fal.run/fal-ai/z-image/turbo', {
+        const response = await fetch(apiEndpoint, {
             method: 'POST',
             headers: {
                 'Authorization': `Key ${FAL_KEY}`,
