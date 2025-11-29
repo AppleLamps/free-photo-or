@@ -95,6 +95,9 @@ function getGenerationSettings() {
         settings.acceleration = accelerationSelect?.value || 'none';
     } else if (model === 'piflow') {
         // Piflow settings - simple model with minimal params
+    } else if (model === 'reve') {
+        // Reve settings - uses aspect_ratio instead of image_size
+        settings.aspect_ratio = aspectRatioSelect?.value || '3:2';
     } else {
         // Z-Image Turbo settings
         settings.acceleration = accelerationSelect?.value || 'none';
@@ -617,6 +620,25 @@ function updateSettingsForModel(model) {
                 if (formatSelect.value === 'webp') {
                     formatSelect.value = 'jpeg';
                 }
+            }
+        }
+    } else if (model === 'reve') {
+        // Show Reve settings - uses aspect ratio, no steps
+        guidanceGroup?.classList.add('settings-group--hidden');
+        negativePromptGroup?.classList.add('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.add('settings-group--hidden');
+        aspectRatioGroup?.classList.remove('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.add('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+
+        // Update format options (Reve supports all formats including webp)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = false;
             }
         }
     } else {

@@ -216,6 +216,16 @@ module.exports = async function handler(req, res) {
         if (seed !== undefined && seed !== null && seed !== '') {
             payload.seed = parseInt(seed, 10);
         }
+    } else if (model === 'reve') {
+        // Reve model - text rendering and aesthetic quality
+        apiEndpoint = 'https://fal.run/fal-ai/reve/text-to-image';
+        payload = {
+            prompt: prompt.trim(),
+            aspect_ratio: aspect_ratio || '3:2',
+            num_images: parseInt(num_images, 10),
+            output_format,
+            sync_mode,
+        };
     } else {
         // Z-Image Turbo model (default)
         apiEndpoint = 'https://fal.run/fal-ai/z-image/turbo';
