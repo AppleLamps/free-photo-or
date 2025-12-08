@@ -71,6 +71,13 @@ function getGenerationSettings() {
         if (inputImageDataUri) {
             settings.image_url = inputImageDataUri;
         }
+    } else if (model === 'seedream-45-edit') {
+        // Seedream 4.5 Edit settings - requires at least one image
+        if (inputImageDataUri) {
+            settings.image_urls = [inputImageDataUri];
+        } else {
+            settings.image_urls = [];
+        }
     } else if (model === 'hidream-i1-fast') {
         // HiDream I1 Fast settings
         const negativePrompt = negativePromptInput?.value?.trim();
@@ -675,6 +682,44 @@ function updateSettingsForModel(model) {
         if (safetyCheckbox) {
             safetyCheckbox.checked = false;
         }
+    } else if (model === 'seedream-45-edit') {
+        // Show Seedream 4.5 Edit settings - image-to-image editing
+        guidanceGroup?.classList.add('settings-group--hidden');
+        negativePromptGroup?.classList.add('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.remove('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+
+        // Require at least one image; update hint
+        if (inputImageHint) {
+            inputImageHint.textContent = 'Required: Upload at least one image (supports 1-10)';
+        }
+
+        // Keep steps within default range
+        if (stepsInput) {
+            stepsInput.max = '30';
+            if (parseInt(stepsInput.value, 10) > 30) {
+                stepsInput.value = '30';
+                if (stepsValue) stepsValue.textContent = '30';
+            }
+        }
+
+        // Allow all formats
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = false;
+            }
+        }
+
+        // Default to lowest safety for this model
+        if (safetyCheckbox) {
+            safetyCheckbox.checked = false;
+        }
     } else {
         // Show Z-Image Turbo settings (default)
         guidanceGroup?.classList.add('settings-group--hidden');
@@ -751,6 +796,16 @@ async function handleGenerate(input, button) {
     // Get generation settings
     const settings = getGenerationSettings();
     const numImages = settings.num_images;
+
+    // Validate required inputs for specific models
+    if (settings.model === 'flux-kontext' && !settings.image_url) {
+        showError('FLUX Kontext requires an input image.');
+        return;
+    }
+    if (settings.model === 'seedream-45-edit' && (!settings.image_urls || settings.image_urls.length === 0)) {
+        showError('Seedream 4.5 Edit requires at least one input image.');
+        return;
+    }
 
     // Disable input while generating
     setLoading(input, button, true);

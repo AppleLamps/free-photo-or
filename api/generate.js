@@ -31,6 +31,7 @@ module.exports = async function handler(req, res) {
         negative_prompt = '',
         use_turbo = false,
         image_url = null,
+        image_urls = [],
         // FLUX Kontext parameters
         aspect_ratio = '1:1',
         safety_tolerance = '2',
@@ -50,6 +51,14 @@ module.exports = async function handler(req, res) {
     // Determine API endpoint and build payload based on model
     let apiEndpoint;
     let payload;
+
+    // Normalize image URLs for models that require them
+    const normalizedImageUrls = Array.isArray(image_urls)
+        ? image_urls.filter((url) => typeof url === 'string' && url.trim() !== '')
+        : [];
+    if (image_url && typeof image_url === 'string' && image_url.trim() !== '') {
+        normalizedImageUrls.push(image_url.trim());
+    }
 
     if (model === 'qwen-image') {
         // Qwen Image model
@@ -226,6 +235,31 @@ module.exports = async function handler(req, res) {
             num_images: parseInt(num_images, 10),
             enable_safety_checker: enable_safety_checker ?? false, // default to lowest safety
             sync_mode,
+        };
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
+
+        // Support optional multi-image generation if provided
+        if (max_images !== undefined && max_images !== null && max_images !== '') {
+            payload.max_images = parseInt(max_images, 10);
+        }
+    } else if (model === 'seedream-45-edit') {
+        // ByteDance Seedream 4.5 Image-to-Image (edit)
+        if (!normalizedImageUrls.length) {
+            return res.status(400).json({ error: 'Seedream 4.5 Edit requires at least one input image' });
+        }
+
+        apiEndpoint = 'https://fal.run/fal-ai/bytedance/seedream/v4.5/edit';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            num_images: parseInt(num_images, 10),
+            enable_safety_checker: enable_safety_checker ?? false, // lowest safety by default
+            sync_mode,
+            image_urls: normalizedImageUrls.slice(-10), // API allows up to 10 inputs
         };
 
         // Add seed if provided

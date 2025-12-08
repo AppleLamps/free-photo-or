@@ -7,7 +7,7 @@ const ENHANCE_ENDPOINT = '/api/enhance';
 
 /**
  * @typedef {Object} GenerateOptions
- * @property {string} [model] - Model to use (z-image-turbo, seedream-45, hidream-i1-fast, qwen-image, flux-kontext)
+ * @property {string} [model] - Model to use (z-image-turbo, seedream-45, seedream-45-edit, hidream-i1-fast, qwen-image, flux-kontext)
  * @property {string} [image_size] - Image size preset or custom dimensions
  * @property {number} [num_inference_steps] - Number of inference steps
  * @property {number} [seed] - Seed for reproducibility
@@ -21,6 +21,7 @@ const ENHANCE_ENDPOINT = '/api/enhance';
  * @property {string} [negative_prompt] - Negative prompt (Qwen, HiDream)
  * @property {boolean} [use_turbo] - Turbo mode (Qwen only)
  * @property {string} [image_url] - Input image URL or data URI for editing (Qwen, FLUX Kontext)
+ * @property {string[]} [image_urls] - Input image URLs/data URIs list (Seedream 4.5 Edit)
  * @property {string} [aspect_ratio] - Aspect ratio (FLUX Kontext only)
  * @property {string} [safety_tolerance] - Safety tolerance level 1-6 (FLUX Kontext only)
  * @property {boolean} [enhance_prompt] - Enhance prompt (FLUX Kontext only)
