@@ -7,12 +7,13 @@ const ENHANCE_ENDPOINT = '/api/enhance';
 
 /**
  * @typedef {Object} GenerateOptions
- * @property {string} [model] - Model to use (z-image-turbo, hidream-i1-fast, qwen-image, flux-kontext)
+ * @property {string} [model] - Model to use (z-image-turbo, seedream-45, hidream-i1-fast, qwen-image, flux-kontext)
  * @property {string} [image_size] - Image size preset or custom dimensions
  * @property {number} [num_inference_steps] - Number of inference steps
  * @property {number} [seed] - Seed for reproducibility
  * @property {boolean} [sync_mode] - Whether to use sync mode
  * @property {number} [num_images] - Number of images to generate
+ * @property {number} [max_images] - Optional max images per generation (Seedream)
  * @property {boolean} [enable_safety_checker] - Enable safety checker
  * @property {string} [output_format] - Output format (png, jpeg, webp)
  * @property {string} [acceleration] - Acceleration level (none, regular, high)

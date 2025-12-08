@@ -20,9 +20,10 @@ module.exports = async function handler(req, res) {
         image_size = 'landscape_4_3',
         num_inference_steps = 30,
         num_images = 1,
+        max_images,
         seed,
         output_format = 'png',
-        enable_safety_checker = true,
+        enable_safety_checker = false,
         sync_mode = false,
         acceleration = 'none',
         // Qwen-specific parameters
@@ -215,6 +216,26 @@ module.exports = async function handler(req, res) {
         // Add seed if provided
         if (seed !== undefined && seed !== null && seed !== '') {
             payload.seed = parseInt(seed, 10);
+        }
+    } else if (model === 'seedream-45') {
+        // ByteDance Seedream 4.5 Text-to-Image
+        apiEndpoint = 'https://fal.run/fal-ai/bytedance/seedream/v4.5/text-to-image';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            num_images: parseInt(num_images, 10),
+            enable_safety_checker: enable_safety_checker ?? false, // default to lowest safety
+            sync_mode,
+        };
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
+
+        // Support optional multi-image generation if provided
+        if (max_images !== undefined && max_images !== null && max_images !== '') {
+            payload.max_images = parseInt(max_images, 10);
         }
     } else if (model === 'reve') {
         // Reve model - text rendering and aesthetic quality

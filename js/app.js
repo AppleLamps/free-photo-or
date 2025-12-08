@@ -383,6 +383,7 @@ function updateSettingsForModel(model) {
     const imageSizeGroup = document.getElementById('image-size-group');
     const aspectRatioGroup = document.getElementById('aspect-ratio-group');
     const enhancePromptGroup = document.getElementById('enhance-prompt-group');
+    const safetyCheckbox = document.getElementById('setting-safety');
 
     if (model === 'qwen-image') {
         // Show Qwen-specific settings
@@ -640,6 +641,39 @@ function updateSettingsForModel(model) {
             if (webpOption) {
                 webpOption.disabled = false;
             }
+        }
+    } else if (model === 'seedream-45') {
+        // Show Seedream 4.5 settings - simple text-to-image
+        guidanceGroup?.classList.add('settings-group--hidden');
+        negativePromptGroup?.classList.add('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+
+        // Keep steps within default range
+        if (stepsInput) {
+            stepsInput.max = '30';
+            if (parseInt(stepsInput.value, 10) > 30) {
+                stepsInput.value = '30';
+                if (stepsValue) stepsValue.textContent = '30';
+            }
+        }
+
+        // Allow all formats
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = false;
+            }
+        }
+
+        // Default to lowest safety for this model
+        if (safetyCheckbox) {
+            safetyCheckbox.checked = false;
         }
     } else {
         // Show Z-Image Turbo settings (default)
