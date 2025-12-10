@@ -14,7 +14,7 @@ let emptyStateElement = null;
 /** @type {HTMLElement[]} */
 let placeholderElements = [];
 
-/** @type {Map<string, NodeJS.Timeout>} */
+/** @type {Map<string, number>} */
 let confirmationTimeouts = new Map();
 
 /** @type {Set<string>} */
@@ -243,7 +243,20 @@ function removeImageCard(id) {
     if (card) {
         card.style.opacity = '0';
         card.style.transform = 'scale(0.9)';
-        setTimeout(() => card.remove(), 200);
+
+        // Use transitionend for more reliable removal
+        const handleTransitionEnd = () => {
+            card.removeEventListener('transitionend', handleTransitionEnd);
+            card.remove();
+        };
+        card.addEventListener('transitionend', handleTransitionEnd);
+
+        // Fallback timeout in case transitionend doesn't fire
+        setTimeout(() => {
+            if (card.parentNode) {
+                card.remove();
+            }
+        }, 300);
 
         // Clean up confirmation state when image is removed
         resetConfirmationState(id);

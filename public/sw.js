@@ -73,7 +73,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     // Skip external requests
-    if (url.origin !== location.origin) {
+    if (url.origin !== self.location.origin) {
         return;
     }
 

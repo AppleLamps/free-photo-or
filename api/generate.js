@@ -42,6 +42,12 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'Prompt is required' });
     }
 
+    // Validate num_images
+    const parsedNumImages = parseInt(num_images, 10);
+    if (!Number.isInteger(parsedNumImages) || parsedNumImages < 1 || parsedNumImages > 4) {
+        return res.status(400).json({ error: '`num_images` must be an integer between 1 and 4' });
+    }
+
     const FAL_KEY = process.env.FAL_KEY;
 
     if (!FAL_KEY) {

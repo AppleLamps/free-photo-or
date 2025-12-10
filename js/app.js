@@ -785,6 +785,9 @@ function closeSettings(button, panel) {
  * @param {HTMLButtonElement} button - Generate button element
  */
 async function handleGenerate(input, button) {
+    // Guard against rapid clicks
+    if (button.disabled) return;
+
     const prompt = input.value.trim();
 
     if (!prompt) {
@@ -822,6 +825,11 @@ async function handleGenerate(input, button) {
         removeAllPlaceholders();
 
         if (response.images && response.images.length > 0) {
+            // Create storable settings (exclude large data URIs to prevent localStorage overflow)
+            const storableSettings = { ...settings };
+            delete storableSettings.image_url;
+            delete storableSettings.image_urls;
+
             // Add each generated image to state with settings for remix
             response.images.forEach((image) => {
                 state.addImage({
@@ -829,13 +837,21 @@ async function handleGenerate(input, button) {
                     url: image.url,
                     prompt: prompt,
                     createdAt: Date.now(),
-                    settings: { ...settings }
+                    settings: storableSettings
                 });
             });
 
             // Clear input and reset height
             input.value = '';
             autoResizeTextarea(input);
+
+            // Clear the image upload preview
+            clearImageUpload(
+                document.getElementById('setting-input-image'),
+                document.getElementById('image-upload-label'),
+                document.getElementById('image-preview'),
+                document.getElementById('image-preview-img')
+            );
         }
     } catch (error) {
         console.error('Generation failed:', error);
@@ -958,6 +974,13 @@ function handleRemixImage(event) {
  * @param {Object} settings - Saved generation settings
  */
 function restoreSettings(settings) {
+    // Model selection (must be first to trigger UI updates)
+    const modelSelect = document.getElementById('setting-model');
+    if (modelSelect && settings.model) {
+        modelSelect.value = settings.model;
+        updateSettingsForModel(settings.model);
+    }
+
     // Image size
     const imageSizeSelect = document.getElementById('setting-image-size');
     const customSizeGroup = document.getElementById('custom-size-group');
@@ -1030,10 +1053,15 @@ function restoreSettings(settings) {
 function setEnhanceLoading(button, isLoading) {
     button.disabled = isLoading;
 
+    const enhanceIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`;
+    const loadingIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
+
     if (isLoading) {
         button.classList.add('input-bar__icon-btn--loading');
+        button.innerHTML = loadingIcon;
     } else {
         button.classList.remove('input-bar__icon-btn--loading');
+        button.innerHTML = enhanceIcon;
     }
 }
 
