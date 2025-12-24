@@ -23,11 +23,36 @@ let pendingDeletions = new Set();
 /** @type {HTMLElement|null} */
 let lastFocusedElement = null;
 
+/** @type {HTMLElement|null} */
+let lightboxModalContentElement = null;
+
 /** @type {number} */
 let scrollYBeforeLock = 0;
 
 /** @type {boolean} */
 let isScrollLocked = false;
+
+/**
+ * Swipe-to-close state for the lightbox (kept at module scope so it can be reset on close).
+ * @type {{startX:number,startY:number,startTime:number,deltaY:number,isActive:boolean}}
+ */
+const lightboxSwipeState = { startX: 0, startY: 0, startTime: 0, deltaY: 0, isActive: false };
+
+function resetLightboxSwipeState() {
+    lightboxSwipeState.startX = 0;
+    lightboxSwipeState.startY = 0;
+    lightboxSwipeState.startTime = 0;
+    lightboxSwipeState.deltaY = 0;
+    lightboxSwipeState.isActive = false;
+
+    const modal = document.getElementById('lightbox-modal');
+    if (modal) {
+        modal.classList.remove('modal--dragging');
+    }
+    if (lightboxModalContentElement) {
+        lightboxModalContentElement.style.transform = '';
+    }
+}
 
 function lockBodyScroll() {
     if (isScrollLocked) return;
@@ -353,6 +378,9 @@ function openLightbox(image) {
 
     lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
+    // Defensive: ensure any previous swipe/drag state is cleared before opening.
+    resetLightboxSwipeState();
+
     if (modalImage) {
         modalImage.src = image.url;
         modalImage.alt = image.prompt;
@@ -425,6 +453,9 @@ export function closeLightbox() {
     modal.classList.remove('modal--ui-hidden', 'modal--dragging');
     modal.setAttribute('aria-hidden', 'true');
 
+    // Reset swipe-to-close state in case the modal is closed mid-gesture (e.g. ESC/backdrop).
+    resetLightboxSwipeState();
+
     unlockBodyScroll();
 
     if (lastFocusedElement instanceof HTMLElement) {
@@ -446,6 +477,7 @@ export function initLightbox() {
     }
 
     const modalContent = modal.querySelector('.modal__content');
+    lightboxModalContentElement = modalContent instanceof HTMLElement ? modalContent : null;
     const modalImage = modal.querySelector('.modal__image');
 
     // Close on backdrop click
@@ -472,9 +504,6 @@ export function initLightbox() {
 
     // Swipe down to close (touch devices)
     if (modalContent) {
-        /** @type {{startX:number,startY:number,startTime:number,deltaY:number,isActive:boolean}} */
-        const swipeState = { startX: 0, startY: 0, startTime: 0, deltaY: 0, isActive: false };
-
         const shouldIgnoreSwipe = (target) => {
             if (!(target instanceof Element)) return true;
             // Don't hijack scrolling inside the prompt / actions area.
@@ -486,26 +515,31 @@ export function initLightbox() {
             if (e.touches.length !== 1) return;
             if (shouldIgnoreSwipe(e.target)) return;
 
-            swipeState.startX = e.touches[0].clientX;
-            swipeState.startY = e.touches[0].clientY;
-            swipeState.startTime = Date.now();
-            swipeState.deltaY = 0;
-            swipeState.isActive = true;
+            lightboxSwipeState.startX = e.touches[0].clientX;
+            lightboxSwipeState.startY = e.touches[0].clientY;
+            lightboxSwipeState.startTime = Date.now();
+            lightboxSwipeState.deltaY = 0;
+            lightboxSwipeState.isActive = true;
         }, { passive: true });
 
         modalContent.addEventListener('touchmove', (e) => {
-            if (!swipeState.isActive) return;
+            if (!modal.classList.contains('modal--active')) {
+                // If we somehow receive move events while closed, discard swipe state.
+                resetLightboxSwipeState();
+                return;
+            }
+            if (!lightboxSwipeState.isActive) return;
             if (e.touches.length !== 1) return;
 
             const x = e.touches[0].clientX;
             const y = e.touches[0].clientY;
-            const dx = x - swipeState.startX;
-            const dy = y - swipeState.startY;
+            const dx = x - lightboxSwipeState.startX;
+            const dy = y - lightboxSwipeState.startY;
 
             // Only treat as swipe-to-close when dragging downward more than sideways.
             if (dy <= 0 || Math.abs(dy) < Math.abs(dx)) return;
 
-            swipeState.deltaY = dy;
+            lightboxSwipeState.deltaY = dy;
             modal.classList.add('modal--dragging');
 
             // Prevent rubber-banding while dragging.
@@ -516,12 +550,12 @@ export function initLightbox() {
         }, { passive: false });
 
         const endSwipe = () => {
-            if (!swipeState.isActive) return;
-            swipeState.isActive = false;
+            if (!lightboxSwipeState.isActive) return;
+            lightboxSwipeState.isActive = false;
 
-            const elapsed = Math.max(Date.now() - swipeState.startTime, 1);
-            const velocity = swipeState.deltaY / elapsed; // px/ms
-            const shouldClose = swipeState.deltaY > 110 || velocity > 0.85;
+            const elapsed = Math.max(Date.now() - lightboxSwipeState.startTime, 1);
+            const velocity = lightboxSwipeState.deltaY / elapsed; // px/ms
+            const shouldClose = lightboxSwipeState.deltaY > 110 || velocity > 0.85;
 
             modal.classList.remove('modal--dragging');
             modalContent.style.transform = '';
