@@ -319,8 +319,8 @@
         </div>
 
         <!-- Lightbox Modal -->
-        <div id="lightbox-modal" class="modal">
-            <button class="modal__close" title="Close">✕</button>
+        <div id="lightbox-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+            <button class="modal__close" type="button" title="Close" aria-label="Close photo">✕</button>
             <div class="modal__content">
                 <img class="modal__image" src="" alt="">
                 <div class="modal__info">
