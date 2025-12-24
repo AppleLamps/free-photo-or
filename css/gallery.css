@@ -17,13 +17,32 @@
     aspect-ratio: 1;
 }
 
-.gallery__card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+/* Hover effects only for devices that support hover */
+@media (hover: hover) {
+    .gallery__card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .gallery__card:hover .gallery__delete-btn {
+        opacity: 1;
+    }
+
+    .gallery__card:hover .gallery__image {
+        transform: scale(1.05);
+    }
 }
 
-.gallery__card:hover .gallery__delete-btn {
-    opacity: 1;
+/* Mobile/Touch optimizations - Always show controls or handle differently */
+@media (hover: none) {
+    .gallery__delete-btn {
+        opacity: 1; /* Always visible on touch */
+        background: rgba(0, 0, 0, 0.6); /* Slightly darker for visibility */
+    }
+    
+    .gallery__card:active {
+        transform: scale(0.98);
+    }
 }
 
 /* Image */
@@ -33,10 +52,6 @@
     object-fit: cover;
     display: block;
     transition: transform 0.3s ease;
-}
-
-.gallery__card:hover .gallery__image {
-    transform: scale(1.05);
 }
 
 /* Overlay - Hidden by default, only show delete on hover */
