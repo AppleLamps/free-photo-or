@@ -20,6 +20,70 @@ let confirmationTimeouts = new Map();
 /** @type {Set<string>} */
 let pendingDeletions = new Set();
 
+/** @type {HTMLElement|null} */
+let lastFocusedElement = null;
+
+/** @type {HTMLElement|null} */
+let lightboxModalContentElement = null;
+
+/** @type {number} */
+let scrollYBeforeLock = 0;
+
+/** @type {boolean} */
+let isScrollLocked = false;
+
+/**
+ * Swipe-to-close state for the lightbox (kept at module scope so it can be reset on close).
+ * @type {{startX:number,startY:number,startTime:number,deltaY:number,isActive:boolean}}
+ */
+const lightboxSwipeState = { startX: 0, startY: 0, startTime: 0, deltaY: 0, isActive: false };
+
+function resetLightboxSwipeState() {
+    lightboxSwipeState.startX = 0;
+    lightboxSwipeState.startY = 0;
+    lightboxSwipeState.startTime = 0;
+    lightboxSwipeState.deltaY = 0;
+    lightboxSwipeState.isActive = false;
+
+    const modal = document.getElementById('lightbox-modal');
+    if (modal) {
+        modal.classList.remove('modal--dragging');
+    }
+    if (lightboxModalContentElement) {
+        lightboxModalContentElement.style.transform = '';
+    }
+}
+
+function lockBodyScroll() {
+    if (isScrollLocked) return;
+    isScrollLocked = true;
+
+    scrollYBeforeLock = window.scrollY || window.pageYOffset || 0;
+
+    // iOS Safari: `overflow: hidden` is not sufficient; fix the body in place.
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollYBeforeLock}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+}
+
+function unlockBodyScroll() {
+    if (!isScrollLocked) return;
+    isScrollLocked = false;
+
+    const top = document.body.style.top;
+    const y = top ? Math.abs(parseInt(top, 10)) : scrollYBeforeLock;
+
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+
+    window.scrollTo(0, y);
+}
+
 /**
  * Reset confirmation state for an image
  * @param {string} imageId - Image ID
@@ -310,6 +374,12 @@ function openLightbox(image) {
     const downloadBtn = modal.querySelector('.modal__download-btn');
     const copyBtn = modal.querySelector('.modal__copy-btn');
     const actionsContainer = modal.querySelector('.modal__actions');
+    const closeBtn = modal.querySelector('.modal__close');
+
+    lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    // Defensive: ensure any previous swipe/drag state is cleared before opening.
+    resetLightboxSwipeState();
 
     if (modalImage) {
         modalImage.src = image.url;
@@ -358,8 +428,18 @@ function openLightbox(image) {
         actionsContainer.insertBefore(remixBtn, downloadBtn);
     }
 
+    modal.classList.remove('modal--ui-hidden', 'modal--dragging');
     modal.classList.add('modal--active');
-    document.body.style.overflow = 'hidden';
+    modal.setAttribute('aria-hidden', 'false');
+
+    lockBodyScroll();
+
+    // Move focus into the dialog for better keyboard accessibility.
+    if (closeBtn instanceof HTMLElement) {
+        closeBtn.focus({ preventScroll: true });
+    } else {
+        modal.focus({ preventScroll: true });
+    }
 }
 
 /**
@@ -370,7 +450,18 @@ export function closeLightbox() {
     if (!modal) return;
 
     modal.classList.remove('modal--active');
-    document.body.style.overflow = '';
+    modal.classList.remove('modal--ui-hidden', 'modal--dragging');
+    modal.setAttribute('aria-hidden', 'true');
+
+    // Reset swipe-to-close state in case the modal is closed mid-gesture (e.g. ESC/backdrop).
+    resetLightboxSwipeState();
+
+    unlockBodyScroll();
+
+    if (lastFocusedElement instanceof HTMLElement) {
+        lastFocusedElement.focus({ preventScroll: true });
+        lastFocusedElement = null;
+    }
 }
 
 /**
@@ -385,6 +476,10 @@ export function initLightbox() {
         closeBtn.addEventListener('click', closeLightbox);
     }
 
+    const modalContent = modal.querySelector('.modal__content');
+    lightboxModalContentElement = modalContent instanceof HTMLElement ? modalContent : null;
+    const modalImage = modal.querySelector('.modal__image');
+
     // Close on backdrop click
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
@@ -392,10 +487,85 @@ export function initLightbox() {
         }
     });
 
+    // Tap image to toggle UI (mobile-friendly "clean view")
+    if (modalImage) {
+        modalImage.addEventListener('click', () => {
+            if (!modal.classList.contains('modal--active')) return;
+            modal.classList.toggle('modal--ui-hidden');
+        });
+    }
+
     // Close on escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeLightbox();
         }
     });
+
+    // Swipe down to close (touch devices)
+    if (modalContent) {
+        const shouldIgnoreSwipe = (target) => {
+            if (!(target instanceof Element)) return true;
+            // Don't hijack scrolling inside the prompt / actions area.
+            return Boolean(target.closest('.modal__info'));
+        };
+
+        modalContent.addEventListener('touchstart', (e) => {
+            if (!modal.classList.contains('modal--active')) return;
+            if (e.touches.length !== 1) return;
+            if (shouldIgnoreSwipe(e.target)) return;
+
+            lightboxSwipeState.startX = e.touches[0].clientX;
+            lightboxSwipeState.startY = e.touches[0].clientY;
+            lightboxSwipeState.startTime = Date.now();
+            lightboxSwipeState.deltaY = 0;
+            lightboxSwipeState.isActive = true;
+        }, { passive: true });
+
+        modalContent.addEventListener('touchmove', (e) => {
+            if (!modal.classList.contains('modal--active')) {
+                // If we somehow receive move events while closed, discard swipe state.
+                resetLightboxSwipeState();
+                return;
+            }
+            if (!lightboxSwipeState.isActive) return;
+            if (e.touches.length !== 1) return;
+
+            const x = e.touches[0].clientX;
+            const y = e.touches[0].clientY;
+            const dx = x - lightboxSwipeState.startX;
+            const dy = y - lightboxSwipeState.startY;
+
+            // Only treat as swipe-to-close when dragging downward more than sideways.
+            if (dy <= 0 || Math.abs(dy) < Math.abs(dx)) return;
+
+            lightboxSwipeState.deltaY = dy;
+            modal.classList.add('modal--dragging');
+
+            // Prevent rubber-banding while dragging.
+            e.preventDefault();
+
+            const translateY = Math.min(dy, window.innerHeight * 0.65);
+            modalContent.style.transform = `translate3d(0, ${translateY}px, 0)`;
+        }, { passive: false });
+
+        const endSwipe = () => {
+            if (!lightboxSwipeState.isActive) return;
+            lightboxSwipeState.isActive = false;
+
+            const elapsed = Math.max(Date.now() - lightboxSwipeState.startTime, 1);
+            const velocity = lightboxSwipeState.deltaY / elapsed; // px/ms
+            const shouldClose = lightboxSwipeState.deltaY > 110 || velocity > 0.85;
+
+            modal.classList.remove('modal--dragging');
+            modalContent.style.transform = '';
+
+            if (shouldClose) {
+                closeLightbox();
+            }
+        };
+
+        modalContent.addEventListener('touchend', endSwipe, { passive: true });
+        modalContent.addEventListener('touchcancel', endSwipe, { passive: true });
+    }
 }
