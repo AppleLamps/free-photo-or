@@ -36,6 +36,7 @@ function getGenerationSettings() {
 
     // Get input image data URI if available (stored globally)
     const inputImageDataUri = window.__inputImageDataUri || null;
+    const multiImageDataUris = window.__multiImageDataUris || [];
 
     const settings = {
         model,
@@ -47,7 +48,48 @@ function getGenerationSettings() {
     };
 
     // Model-specific settings
-    if (model === 'qwen-image') {
+    if (model === 'nano-banana-pro-edit') {
+        // Nano Banana Pro Edit - requires at least one image
+        if (multiImageDataUris.length > 0) {
+            settings.image_urls = multiImageDataUris;
+        } else if (inputImageDataUri) {
+            settings.image_urls = [inputImageDataUri];
+        }
+        settings.resolution = document.getElementById('setting-resolution')?.value || '1K';
+        settings.limit_generations = document.getElementById('setting-limit-generations')?.checked ?? false;
+        settings.enable_web_search = document.getElementById('setting-enable-web-search')?.checked ?? false;
+    } else if (model === 'fibo') {
+        // Fibo Text-to-Image settings
+        settings.guidance_scale = parseFloat(guidanceInput?.value || 5);
+        const negativePrompt = negativePromptInput?.value?.trim();
+        if (negativePrompt) {
+            settings.negative_prompt = negativePrompt;
+        }
+        // Optional reference image
+        if (inputImageDataUri) {
+            settings.image_url = inputImageDataUri;
+        }
+    } else if (model === 'wan-26-text-to-image') {
+        // Wan v2.6 Text-to-Image settings
+        const negativePrompt = negativePromptInput?.value?.trim();
+        if (negativePrompt) {
+            settings.negative_prompt = negativePrompt;
+        }
+        // Optional single reference image
+        if (inputImageDataUri) {
+            settings.image_url = inputImageDataUri;
+        }
+    } else if (model === 'wan-26-image-to-image') {
+        // Wan v2.6 Image-to-Image settings - requires 1-3 images
+        if (multiImageDataUris.length > 0) {
+            settings.image_urls = multiImageDataUris.slice(0, 3);
+        }
+        const negativePrompt = negativePromptInput?.value?.trim();
+        if (negativePrompt) {
+            settings.negative_prompt = negativePrompt;
+        }
+        settings.enhance_prompt = enhancePromptCheckbox?.checked ?? true;
+    } else if (model === 'qwen-image') {
         // Qwen-specific settings
         settings.guidance_scale = parseFloat(guidanceInput?.value || 2.5);
         settings.use_turbo = turboCheckbox?.checked ?? false;
@@ -259,6 +301,9 @@ function initSettingsUI() {
 
     // Initialize image upload handlers
     initImageUpload();
+
+    // Initialize multi-image upload handlers for Wan v2.6 image-to-image
+    initMultiImageUpload();
 }
 
 /**
@@ -371,6 +416,157 @@ function clearImageUpload(input, label, preview, previewImg) {
 }
 
 /**
+ * Initialize multi-image upload handlers for Wan v2.6 image-to-image
+ */
+function initMultiImageUpload() {
+    const multiImageInput = document.getElementById('setting-multi-images');
+    const multiImageLabel = document.getElementById('multi-image-upload-label');
+    const multiImagePreviews = document.getElementById('multi-image-previews');
+
+    // Initialize global storage for multiple image data URIs
+    window.__multiImageDataUris = [];
+
+    if (!multiImageInput || !multiImageLabel || !multiImagePreviews) {
+        return;
+    }
+
+    // Handle file selection
+    multiImageInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length > 0) {
+            handleMultipleImageFiles(files, multiImagePreviews);
+        }
+    });
+
+    // Handle drag and drop
+    multiImageLabel.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        multiImageLabel.classList.add('image-upload__label--dragover');
+    });
+
+    multiImageLabel.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        multiImageLabel.classList.remove('image-upload__label--dragover');
+    });
+
+    multiImageLabel.addEventListener('drop', (e) => {
+        e.preventDefault();
+        multiImageLabel.classList.remove('image-upload__label--dragover');
+        const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+        if (files.length > 0) {
+            handleMultipleImageFiles(files, multiImagePreviews);
+            // Update the input
+            const dataTransfer = new DataTransfer();
+            files.forEach(file => dataTransfer.items.add(file));
+            multiImageInput.files = dataTransfer.files;
+        }
+    });
+}
+
+/**
+ * Handle multiple uploaded image files
+ * @param {File[]} files - The image files
+ * @param {HTMLElement} previewsContainer - The previews container
+ */
+function handleMultipleImageFiles(files, previewsContainer) {
+    // Limit to 3 images for Wan v2.6
+    if (files.length > 3) {
+        showError('Maximum 3 images allowed');
+        files = files.slice(0, 3);
+    }
+
+    // Validate files
+    for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+            showError('Please select valid image files only');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            showError(`Image "${file.name}" is too large (max 10MB)`);
+            return;
+        }
+    }
+
+    // Clear existing previews
+    window.__multiImageDataUris = [];
+    previewsContainer.innerHTML = '';
+
+    // Process each file
+    files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUri = e.target?.result;
+            if (dataUri) {
+                window.__multiImageDataUris.push(dataUri);
+                addMultiImagePreview(dataUri, index + 1, previewsContainer);
+            }
+        };
+        reader.onerror = () => {
+            showError(`Failed to read image file: ${file.name}`);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+/**
+ * Add a preview for a multi-image upload
+ * @param {string} dataUri - The image data URI
+ * @param {number} index - The image number (1-based)
+ * @param {HTMLElement} container - The container element
+ */
+function addMultiImagePreview(dataUri, index, container) {
+    const preview = document.createElement('div');
+    preview.className = 'multi-image-preview';
+    preview.dataset.index = index;
+
+    const img = document.createElement('img');
+    img.className = 'multi-image-preview__img';
+    img.src = dataUri;
+    img.alt = `Image ${index}`;
+
+    const label = document.createElement('div');
+    label.className = 'multi-image-preview__label';
+    label.textContent = `Image ${index}`;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'multi-image-preview__remove';
+    removeBtn.textContent = '✕';
+    removeBtn.type = 'button';
+    removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        removeMultiImagePreview(index, container);
+    });
+
+    preview.appendChild(img);
+    preview.appendChild(label);
+    preview.appendChild(removeBtn);
+    container.appendChild(preview);
+}
+
+/**
+ * Remove a multi-image preview
+ * @param {number} index - The image number (1-based)
+ * @param {HTMLElement} container - The container element
+ */
+function removeMultiImagePreview(index, container) {
+    // Remove from data array
+    window.__multiImageDataUris.splice(index - 1, 1);
+
+    // Clear and rebuild previews
+    container.innerHTML = '';
+    window.__multiImageDataUris.forEach((dataUri, i) => {
+        addMultiImagePreview(dataUri, i + 1, container);
+    });
+
+    // Update file input
+    const multiImageInput = document.getElementById('setting-multi-images');
+    if (multiImageInput && window.__multiImageDataUris.length === 0) {
+        multiImageInput.value = '';
+    }
+}
+
+/**
  * Update visible settings based on selected model
  * @param {string} model - The selected model ID
  */
@@ -386,23 +582,172 @@ function updateSettingsForModel(model) {
     const accelerationGroup = document.getElementById('acceleration-group');
     const formatSelect = document.getElementById('setting-format');
     const inputImageGroup = document.getElementById('input-image-group');
+    const multiImageGroup = document.getElementById('multi-image-group');
     const inputImageHint = document.getElementById('input-image-hint');
     const imageSizeGroup = document.getElementById('image-size-group');
     const aspectRatioGroup = document.getElementById('aspect-ratio-group');
     const enhancePromptGroup = document.getElementById('enhance-prompt-group');
     const safetyCheckbox = document.getElementById('setting-safety');
+    const resolutionGroup = document.getElementById('resolution-group');
+    const webSearchGroup = document.getElementById('web-search-group');
+    const limitGenerationsGroup = document.getElementById('limit-generations-group');
 
-    if (model === 'qwen-image') {
+    if (model === 'wan-26-text-to-image') {
+        // Wan v2.6 Text-to-Image settings
+        guidanceGroup?.classList.add('settings-group--hidden');
+        negativePromptGroup?.classList.remove('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.remove('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.add('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
+
+        // Update hint for optional single reference image
+        if (inputImageHint) {
+            inputImageHint.textContent = 'Optional: Upload 0-1 reference image for style guidance (max 10MB, 384-5000px)';
+        }
+
+        // Update format options (Wan outputs PNG)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = true;
+                if (formatSelect.value === 'webp') {
+                    formatSelect.value = 'png';
+                }
+            }
+        }
+
+        // Default to lowest safety
+        if (safetyCheckbox) {
+            safetyCheckbox.checked = false;
+        }
+    } else if (model === 'nano-banana-pro-edit') {
+        // Nano Banana Pro Edit - image editing model
+        guidanceGroup?.classList.add('settings-group--hidden');
+        negativePromptGroup?.classList.add('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.remove('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.add('settings-group--hidden');
+        aspectRatioGroup?.classList.remove('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.add('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.remove('settings-group--hidden');
+        webSearchGroup?.classList.remove('settings-group--hidden');
+        limitGenerationsGroup?.classList.remove('settings-group--hidden');
+
+        // Update format options (supports jpeg, png, webp)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) webpOption.disabled = false;
+        }
+
+        // Default to lowest safety
+        if (safetyCheckbox) {
+            safetyCheckbox.checked = false;
+        }
+    } else if (model === 'fibo') {
+        // Fibo - text-to-image with licensed data
+        guidanceGroup?.classList.remove('settings-group--hidden');
+        negativePromptGroup?.classList.remove('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.remove('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
+        imageSizeGroup?.classList.add('settings-group--hidden');
+        aspectRatioGroup?.classList.remove('settings-group--hidden');
+        enhancePromptGroup?.classList.add('settings-group--hidden');
+        stepsGroup?.classList.remove('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
+
+        // Update hint for optional reference image
+        if (inputImageHint) {
+            inputImageHint.textContent = 'Optional: Upload a reference image for style guidance';
+        }
+
+        // Update guidance scale for Fibo (default 5)
+        if (guidanceInput && guidanceValue) {
+            guidanceInput.value = '5';
+            guidanceValue.textContent = '5';
+        }
+
+        // Update steps range for Fibo (default 50)
+        if (stepsInput) {
+            stepsInput.max = '100';
+            stepsInput.value = '50';
+            if (stepsValue) stepsValue.textContent = '50';
+        }
+
+        // Update format options (supports all)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) webpOption.disabled = false;
+        }
+
+        // Default to lowest safety
+        if (safetyCheckbox) {
+            safetyCheckbox.checked = false;
+        }
+    } else if (model === 'wan-26-image-to-image') {
+        // Wan v2.6 Image-to-Image settings
+        guidanceGroup?.classList.add('settings-group--hidden');
+        negativePromptGroup?.classList.remove('settings-group--hidden');
+        turboGroup?.classList.add('settings-group--hidden');
+        inputImageGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.remove('settings-group--hidden');
+        imageSizeGroup?.classList.remove('settings-group--hidden');
+        aspectRatioGroup?.classList.add('settings-group--hidden');
+        enhancePromptGroup?.classList.remove('settings-group--hidden');
+        stepsGroup?.classList.add('settings-group--hidden');
+        accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
+
+        // Update format options (Wan outputs PNG)
+        if (formatSelect) {
+            const webpOption = formatSelect.querySelector('option[value="webp"]');
+            if (webpOption) {
+                webpOption.disabled = true;
+                if (formatSelect.value === 'webp') {
+                    formatSelect.value = 'png';
+                }
+            }
+        }
+
+        // Default to lowest safety and enable prompt expansion
+        if (safetyCheckbox) {
+            safetyCheckbox.checked = false;
+        }
+        const enhancePromptCheckbox = document.getElementById('setting-enhance-prompt');
+        if (enhancePromptCheckbox) {
+            enhancePromptCheckbox.checked = true;
+        }
+    } else if (model === 'qwen-image') {
         // Show Qwen-specific settings
         guidanceGroup?.classList.remove('settings-group--hidden');
         negativePromptGroup?.classList.remove('settings-group--hidden');
         turboGroup?.classList.remove('settings-group--hidden');
         inputImageGroup?.classList.remove('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.remove('settings-group--hidden');
         aspectRatioGroup?.classList.add('settings-group--hidden');
         enhancePromptGroup?.classList.add('settings-group--hidden');
         stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.remove('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Update hint for optional image
         if (inputImageHint) {
@@ -440,11 +785,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.add('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.remove('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.add('settings-group--hidden');
         aspectRatioGroup?.classList.remove('settings-group--hidden');
         enhancePromptGroup?.classList.remove('settings-group--hidden');
         stepsGroup?.classList.add('settings-group--hidden');
         accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Update hint for required image
         if (inputImageHint) {
@@ -473,11 +822,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.remove('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.remove('settings-group--hidden');
         aspectRatioGroup?.classList.add('settings-group--hidden');
         enhancePromptGroup?.classList.add('settings-group--hidden');
         stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Update steps range for HiDream (default 50 for best quality)
         if (stepsInput) {
@@ -502,11 +855,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.remove('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.remove('settings-group--hidden');
         aspectRatioGroup?.classList.add('settings-group--hidden');
         enhancePromptGroup?.classList.remove('settings-group--hidden');
         stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Update guidance scale for Hunyuan (default 7.5)
         if (guidanceInput && guidanceValue) {
@@ -537,11 +894,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.add('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.remove('settings-group--hidden');
         aspectRatioGroup?.classList.add('settings-group--hidden');
         enhancePromptGroup?.classList.add('settings-group--hidden');
         stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.remove('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Update guidance scale for FLUX.1 [dev] (default 3.5)
         if (guidanceInput && guidanceValue) {
@@ -572,11 +933,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.add('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.remove('settings-group--hidden');
         aspectRatioGroup?.classList.add('settings-group--hidden');
         enhancePromptGroup?.classList.add('settings-group--hidden');
         stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.remove('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Update guidance scale for FLUX Kontext LoRA T2I (default 2.5)
         if (guidanceInput && guidanceValue) {
@@ -607,11 +972,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.add('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.remove('settings-group--hidden');
         aspectRatioGroup?.classList.add('settings-group--hidden');
         enhancePromptGroup?.classList.add('settings-group--hidden');
         stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Update steps range for Piflow (default 8, max 8)
         if (stepsInput) {
@@ -636,11 +1005,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.add('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.add('settings-group--hidden');
         aspectRatioGroup?.classList.remove('settings-group--hidden');
         enhancePromptGroup?.classList.add('settings-group--hidden');
         stepsGroup?.classList.add('settings-group--hidden');
         accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Update format options (Reve supports all formats including webp)
         if (formatSelect) {
@@ -655,11 +1028,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.add('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.remove('settings-group--hidden');
         aspectRatioGroup?.classList.add('settings-group--hidden');
         enhancePromptGroup?.classList.add('settings-group--hidden');
         stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Keep steps within default range
         if (stepsInput) {
@@ -688,11 +1065,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.add('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.remove('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.remove('settings-group--hidden');
         aspectRatioGroup?.classList.add('settings-group--hidden');
         enhancePromptGroup?.classList.add('settings-group--hidden');
         stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.add('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Require at least one image; update hint
         if (inputImageHint) {
@@ -726,11 +1107,15 @@ function updateSettingsForModel(model) {
         negativePromptGroup?.classList.add('settings-group--hidden');
         turboGroup?.classList.add('settings-group--hidden');
         inputImageGroup?.classList.add('settings-group--hidden');
+        multiImageGroup?.classList.add('settings-group--hidden');
         imageSizeGroup?.classList.remove('settings-group--hidden');
         aspectRatioGroup?.classList.add('settings-group--hidden');
         enhancePromptGroup?.classList.add('settings-group--hidden');
         stepsGroup?.classList.remove('settings-group--hidden');
         accelerationGroup?.classList.remove('settings-group--hidden');
+        resolutionGroup?.classList.add('settings-group--hidden');
+        webSearchGroup?.classList.add('settings-group--hidden');
+        limitGenerationsGroup?.classList.add('settings-group--hidden');
 
         // Reset steps range for Z-Image Turbo
         if (stepsInput) {

@@ -7,24 +7,27 @@ const ENHANCE_ENDPOINT = '/api/enhance';
 
 /**
  * @typedef {Object} GenerateOptions
- * @property {string} [model] - Model to use (z-image-turbo, seedream-45, seedream-45-edit, hidream-i1-fast, qwen-image, flux-kontext)
+ * @property {string} [model] - Model to use (z-image-turbo, wan-26-text-to-image, wan-26-image-to-image, nano-banana-pro-edit, fibo, etc.)
  * @property {string} [image_size] - Image size preset or custom dimensions
  * @property {number} [num_inference_steps] - Number of inference steps
  * @property {number} [seed] - Seed for reproducibility
  * @property {boolean} [sync_mode] - Whether to use sync mode
  * @property {number} [num_images] - Number of images to generate
- * @property {number} [max_images] - Optional max images per generation (Seedream)
+ * @property {number} [max_images] - Optional max images per generation (Seedream, Wan)
  * @property {boolean} [enable_safety_checker] - Enable safety checker
  * @property {string} [output_format] - Output format (png, jpeg, webp)
  * @property {string} [acceleration] - Acceleration level (none, regular, high)
- * @property {number} [guidance_scale] - CFG scale (Qwen, FLUX Kontext)
- * @property {string} [negative_prompt] - Negative prompt (Qwen, HiDream)
+ * @property {number} [guidance_scale] - CFG scale (Qwen, FLUX Kontext, Fibo)
+ * @property {string} [negative_prompt] - Negative prompt (Qwen, HiDream, Wan, Fibo)
  * @property {boolean} [use_turbo] - Turbo mode (Qwen only)
- * @property {string} [image_url] - Input image URL or data URI for editing (Qwen, FLUX Kontext)
- * @property {string[]} [image_urls] - Input image URLs/data URIs list (Seedream 4.5 Edit)
- * @property {string} [aspect_ratio] - Aspect ratio (FLUX Kontext only)
+ * @property {string} [image_url] - Input image URL or data URI for editing (Qwen, FLUX Kontext, Wan text-to-image, Fibo)
+ * @property {string[]} [image_urls] - Input image URLs/data URIs list (Seedream 4.5 Edit, Wan image-to-image, Nano Banana Pro)
+ * @property {string} [aspect_ratio] - Aspect ratio (FLUX Kontext, Nano Banana Pro, Fibo)
  * @property {string} [safety_tolerance] - Safety tolerance level 1-6 (FLUX Kontext only)
- * @property {boolean} [enhance_prompt] - Enhance prompt (FLUX Kontext only)
+ * @property {boolean} [enhance_prompt] - Enhance prompt (FLUX Kontext, Wan image-to-image)
+ * @property {string} [resolution] - Resolution (1K, 2K, 4K) for Nano Banana Pro
+ * @property {boolean} [limit_generations] - Limit generations per prompt to 1 (Nano Banana Pro)
+ * @property {boolean} [enable_web_search] - Enable web search for image generation (Nano Banana Pro)
  */
 
 /**

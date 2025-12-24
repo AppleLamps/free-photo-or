@@ -104,6 +104,10 @@
                     <label class="settings-label">Model</label>
                     <select id="setting-model" class="settings-select">
                         <option value="z-image-turbo" selected>Z-Image Turbo (Fast)</option>
+                        <option value="wan-26-text-to-image">Wan v2.6 Text-to-Image</option>
+                        <option value="wan-26-image-to-image">Wan v2.6 Image-to-Image</option>
+                        <option value="nano-banana-pro-edit">Nano Banana Pro Edit (Google)</option>
+                        <option value="fibo">Fibo (BRIA - Licensed Data)</option>
                         <option value="seedream-45">Seedream 4.5 (ByteDance)</option>
                         <option value="seedream-45-edit">Seedream 4.5 Edit (ByteDance)</option>
                         <option value="flux-dev">FLUX.1 [dev] (12B)</option>
@@ -199,6 +203,32 @@
                     </label>
                 </div>
 
+                <!-- Resolution (Nano Banana Pro only) -->
+                <div class="settings-group settings-group--hidden" id="resolution-group">
+                    <label class="settings-label">Resolution</label>
+                    <select id="setting-resolution" class="settings-select">
+                        <option value="1K" selected>1K</option>
+                        <option value="2K">2K</option>
+                        <option value="4K">4K</option>
+                    </select>
+                </div>
+
+                <!-- Web Search (Nano Banana Pro only) -->
+                <div class="settings-group settings-group--hidden" id="web-search-group">
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="setting-enable-web-search">
+                        <span>Enable Web Search</span>
+                    </label>
+                </div>
+
+                <!-- Limit Generations (Nano Banana Pro only) -->
+                <div class="settings-group settings-group--hidden" id="limit-generations-group">
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="setting-limit-generations">
+                        <span>Limit Generations to 1</span>
+                    </label>
+                </div>
+
                 <!-- Input Image for Editing (Qwen only) -->
                 <div class="settings-group settings-group--hidden" id="input-image-group">
                     <label class="settings-label">Input Image (for editing)</label>
@@ -215,6 +245,22 @@
                     </div>
                     <p class="settings-hint" id="input-image-hint">Optional: Upload an image to edit with your prompt
                     </p>
+                </div>
+
+                <!-- Multi-Image Upload for Wan v2.6 Image-to-Image -->
+                <div class="settings-group settings-group--hidden" id="multi-image-group">
+                    <label class="settings-label">Reference Images (1-3 required)</label>
+                    <div class="multi-image-upload">
+                        <input type="file" id="setting-multi-images" class="image-upload__input" accept="image/*"
+                            multiple>
+                        <label for="setting-multi-images" class="image-upload__label" id="multi-image-upload-label">
+                            <span class="image-upload__icon">🖼️</span>
+                            <span class="image-upload__text">Choose 1-3 images or drag here</span>
+                        </label>
+                        <div id="multi-image-previews" class="multi-image-previews"></div>
+                    </div>
+                    <p class="settings-hint">Reference images as 'image 1', 'image 2', 'image 3' in your prompt. Max
+                        10MB each, 384-5000px.</p>
                 </div>
 
                 <!-- Number of Images -->

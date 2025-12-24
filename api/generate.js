@@ -287,6 +287,117 @@ module.exports = async function handler(req, res) {
             output_format,
             sync_mode,
         };
+    } else if (model === 'nano-banana-pro-edit') {
+        // Nano Banana Pro Edit - image-to-image editing (requires image_urls)
+        if (normalizedImageUrls.length === 0) {
+            return res.status(400).json({ error: 'Nano Banana Pro Edit requires at least one input image' });
+        }
+
+        apiEndpoint = 'https://fal.run/fal-ai/nano-banana-pro/edit';
+        payload = {
+            prompt: prompt.trim(),
+            image_urls: normalizedImageUrls,
+            num_images: parseInt(num_images, 10),
+            output_format: output_format || 'png',
+            sync_mode,
+        };
+
+        // Add aspect_ratio if provided
+        if (aspect_ratio) {
+            payload.aspect_ratio = aspect_ratio;
+        }
+
+        // Add resolution if provided (1K, 2K, 4K)
+        const resolution = req.body.resolution || '1K';
+        payload.resolution = resolution;
+
+        // Add optional parameters
+        if (req.body.limit_generations !== undefined) {
+            payload.limit_generations = req.body.limit_generations;
+        }
+        if (req.body.enable_web_search !== undefined) {
+            payload.enable_web_search = req.body.enable_web_search;
+        }
+    } else if (model === 'fibo') {
+        // Fibo - text-to-image with optional reference image
+        apiEndpoint = 'https://fal.run/bria/fibo/generate';
+        payload = {
+            prompt: prompt.trim(),
+            seed: seed !== undefined && seed !== null && seed !== '' ? parseInt(seed, 10) : 5555,
+            steps_num: parseInt(num_inference_steps, 10) || 50,
+            guidance_scale: parseFloat(guidance_scale) || 5,
+            sync_mode,
+        };
+
+        // Add aspect_ratio if provided
+        if (aspect_ratio) {
+            payload.aspect_ratio = aspect_ratio;
+        }
+
+        // Add negative prompt if provided
+        if (negative_prompt && negative_prompt.trim() !== '') {
+            payload.negative_prompt = negative_prompt.trim();
+        }
+
+        // Add optional reference image
+        if (image_url && typeof image_url === 'string' && image_url.trim() !== '') {
+            payload.image_url = image_url.trim();
+        }
+    } else if (model === 'wan-26-text-to-image') {
+        // Wan v2.6 Text-to-Image
+        apiEndpoint = 'https://fal.run/wan/v2.6/text-to-image';
+        payload = {
+            prompt: prompt.trim(),
+            image_size,
+            max_images: parseInt(num_images, 10), // uses max_images instead of num_images
+            enable_safety_checker: enable_safety_checker ?? false, // default to lowest safety
+            sync_mode,
+        };
+
+        // Add negative prompt if provided
+        if (negative_prompt && negative_prompt.trim() !== '') {
+            payload.negative_prompt = negative_prompt.trim();
+        }
+
+        // Add optional reference image (0 or 1 image)
+        if (image_url && typeof image_url === 'string' && image_url.trim() !== '') {
+            payload.image_url = image_url.trim();
+        }
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
+    } else if (model === 'wan-26-image-to-image') {
+        // Wan v2.6 Image-to-Image - requires 1-3 input images
+        if (normalizedImageUrls.length < 1 || normalizedImageUrls.length > 3) {
+            return res.status(400).json({ error: 'Wan v2.6 Image-to-Image requires 1-3 input images' });
+        }
+
+        apiEndpoint = 'https://fal.run/wan/v2.6/image-to-image';
+        payload = {
+            prompt: prompt.trim(),
+            image_urls: normalizedImageUrls.slice(0, 3), // API allows 1-3 inputs
+            image_size,
+            num_images: parseInt(num_images, 10), // uses num_images (1-4)
+            enable_safety_checker: enable_safety_checker ?? false, // default to lowest safety
+            sync_mode,
+        };
+
+        // Add negative prompt if provided
+        if (negative_prompt && negative_prompt.trim() !== '') {
+            payload.negative_prompt = negative_prompt.trim();
+        }
+
+        // Add enable_prompt_expansion if provided (default true)
+        if (enhance_prompt !== undefined) {
+            payload.enable_prompt_expansion = enhance_prompt;
+        }
+
+        // Add seed if provided
+        if (seed !== undefined && seed !== null && seed !== '') {
+            payload.seed = parseInt(seed, 10);
+        }
     } else {
         // Z-Image Turbo model (default)
         apiEndpoint = 'https://fal.run/fal-ai/z-image/turbo';
