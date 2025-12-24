@@ -419,6 +419,9 @@ module.exports = async function handler(req, res) {
     }
 
     try {
+        console.log('API Endpoint:', apiEndpoint);
+        console.log('Payload:', JSON.stringify(payload, null, 2));
+
         const response = await fetch(apiEndpoint, {
             method: 'POST',
             headers: {
@@ -431,6 +434,7 @@ module.exports = async function handler(req, res) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Fal.ai API error:', errorText);
+            console.error('Status:', response.status);
             return res.status(response.status).json({
                 error: 'Failed to generate image',
                 details: errorText
