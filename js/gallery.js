@@ -270,8 +270,9 @@ function createImageCard(image, preloaded = false) {
 
     if (!preloaded) {
         img.onload = () => {
-            img.classList.remove('gallery__image--loading');
-            img.classList.add('gallery__image--loaded');
+            // Use replace() for single reflow instead of remove+add
+            img.classList.replace('gallery__image--loading', 'gallery__image--loaded');
+            img.onload = null; // Clean up handler
         };
     }
 

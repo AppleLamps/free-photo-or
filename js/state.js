@@ -3,6 +3,7 @@
  */
 
 const STORAGE_KEY = 'ai-image-generator-images';
+const SAVE_DEBOUNCE_MS = 300;
 
 /**
  * @typedef {Object} ImageData
@@ -20,6 +21,8 @@ class State {
         /** @type {ImageData[]} */
         this.images = [];
         this.listeners = new Set();
+        /** @type {number|null} */
+        this._saveTimeout = null;
         this.load();
     }
 
@@ -39,9 +42,30 @@ class State {
     }
 
     /**
-     * Save images to localStorage
+     * Save images to localStorage (debounced to reduce stringify overhead)
      */
     save() {
+        if (this._saveTimeout) {
+            clearTimeout(this._saveTimeout);
+        }
+        this._saveTimeout = setTimeout(() => {
+            this._saveTimeout = null;
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(this.images));
+            } catch (error) {
+                console.error('Failed to save to localStorage:', error);
+            }
+        }, SAVE_DEBOUNCE_MS);
+    }
+
+    /**
+     * Save immediately (for critical operations like clearAll)
+     */
+    saveNow() {
+        if (this._saveTimeout) {
+            clearTimeout(this._saveTimeout);
+            this._saveTimeout = null;
+        }
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.images));
         } catch (error) {
@@ -94,7 +118,7 @@ class State {
      */
     clearAll() {
         this.images = [];
-        this.save();
+        this.saveNow(); // Use immediate save for critical operations
         this.notifyListeners('clear', null);
     }
 

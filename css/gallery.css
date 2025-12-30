@@ -12,9 +12,11 @@
     overflow: hidden;
     background: var(--bg-card);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     aspect-ratio: 1;
+    will-change: transform;
+    contain: layout style paint;
 }
 
 .gallery__card:hover {
@@ -50,21 +52,10 @@
     overflow: hidden;
     position: relative;
     isolation: isolate;
-    /* High-tech gold shimmer base */
+    /* High-tech gold shimmer base - simplified for performance */
     background:
         radial-gradient(120% 90% at 20% 10%, rgba(255, 215, 0, 0.16) 0%, rgba(255, 215, 0, 0.0) 55%),
         radial-gradient(120% 90% at 80% 90%, rgba(255, 193, 7, 0.10) 0%, rgba(255, 193, 7, 0.0) 55%),
-        /* subtle circuit grid */
-        repeating-linear-gradient(0deg,
-            rgba(255, 215, 0, 0.05) 0px,
-            rgba(255, 215, 0, 0.05) 1px,
-            transparent 1px,
-            transparent 10px),
-        repeating-linear-gradient(90deg,
-            rgba(255, 215, 0, 0.04) 0px,
-            rgba(255, 215, 0, 0.04) 1px,
-            transparent 1px,
-            transparent 12px),
         linear-gradient(135deg, #1a1408 0%, #2b220f 45%, #1a1408 100%);
     aspect-ratio: 1;
     border: 1px solid rgba(255, 215, 0, 0.12);
@@ -72,32 +63,23 @@
         0 10px 28px rgba(0, 0, 0, 0.16),
         inset 0 0 0 1px rgba(255, 215, 0, 0.06),
         inset 0 0 28px rgba(255, 215, 0, 0.05);
-    animation: techIdle 2.6s ease-in-out infinite;
+    contain: layout style paint;
 }
 
 .gallery__placeholder::before {
     content: '';
     position: absolute;
     inset: 0;
-    transform: translateX(-120%) rotate(10deg);
-    /* scanning beam + scanlines */
-    background:
-        repeating-linear-gradient(
-            0deg,
-            rgba(255, 215, 0, 0.0) 0px,
-            rgba(255, 215, 0, 0.0) 6px,
-            rgba(255, 215, 0, 0.05) 7px,
-            rgba(255, 215, 0, 0.0) 8px
-        ),
-        linear-gradient(105deg,
-            transparent 35%,
-            rgba(255, 215, 0, 0.10) 44%,
-            rgba(255, 215, 0, 0.28) 50%,
-            rgba(255, 193, 7, 0.14) 56%,
-            transparent 68%);
-    mix-blend-mode: screen;
-    filter: blur(0.2px);
-    animation: shimmerTech 1.65s ease-in-out infinite;
+    transform: translateX(-120%);
+    /* scanning beam - simplified for performance */
+    background: linear-gradient(105deg,
+        transparent 35%,
+        rgba(255, 215, 0, 0.10) 44%,
+        rgba(255, 215, 0, 0.28) 50%,
+        rgba(255, 193, 7, 0.14) 56%,
+        transparent 68%);
+    will-change: transform;
+    animation: shimmerTech 1.8s ease-in-out infinite;
 }
 
 .gallery__placeholder::after {
@@ -109,30 +91,21 @@
     height: 46px;
     margin: -23px 0 0 -23px;
     border-radius: 50%;
-    background:
-        conic-gradient(
-            from 180deg,
-            rgba(255, 215, 0, 0.0) 0deg,
-            rgba(255, 215, 0, 0.85) 55deg,
-            rgba(255, 193, 7, 0.25) 120deg,
-            rgba(255, 215, 0, 0.0) 220deg,
-            rgba(255, 215, 0, 0.65) 310deg,
-            rgba(255, 215, 0, 0.0) 360deg
-        );
-    /* Ring mask */
-    -webkit-mask: radial-gradient(circle, transparent 56%, #000 57%, #000 70%, transparent 71%);
-    mask: radial-gradient(circle, transparent 56%, #000 57%, #000 70%, transparent 71%);
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.25));
-    animation: ringSpin 0.95s linear infinite, ringPulse 1.6s ease-in-out infinite;
+    /* Simplified ring with border instead of expensive conic-gradient + drop-shadow */
+    border: 3px solid transparent;
+    border-top-color: rgba(255, 215, 0, 0.85);
+    border-right-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+    will-change: transform;
+    animation: ringSpin 0.9s linear infinite;
 }
 
 @keyframes shimmerTech {
     0% {
-        transform: translateX(-120%) rotate(10deg);
+        transform: translateX(-120%);
     }
-
     100% {
-        transform: translateX(120%) rotate(10deg);
+        transform: translateX(120%);
     }
 }
 
@@ -142,38 +115,7 @@
     }
 }
 
-@keyframes ringPulse {
-    0%,
-    100% {
-        opacity: 0.75;
-        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.18));
-    }
-
-    50% {
-        opacity: 1;
-        filter: drop-shadow(0 0 14px rgba(255, 215, 0, 0.32));
-    }
-}
-
-@keyframes techIdle {
-    0%,
-    100% {
-        box-shadow:
-            0 10px 28px rgba(0, 0, 0, 0.16),
-            inset 0 0 0 1px rgba(255, 215, 0, 0.06),
-            inset 0 0 28px rgba(255, 215, 0, 0.05);
-    }
-
-    50% {
-        box-shadow:
-            0 12px 34px rgba(0, 0, 0, 0.18),
-            inset 0 0 0 1px rgba(255, 215, 0, 0.10),
-            inset 0 0 40px rgba(255, 215, 0, 0.08);
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .gallery__placeholder,
     .gallery__placeholder::before,
     .gallery__placeholder::after {
         animation: none !important;
@@ -181,7 +123,7 @@
 
     .gallery__placeholder::before {
         opacity: 0.6;
-        transform: translateX(0) rotate(0);
+        transform: translateX(0);
     }
 }
 
